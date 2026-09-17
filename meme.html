@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Meme - Phishy Bot</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <img src="assets/img/avatar-logo.png" alt="Phishy Avatar" class="logo-img">
+        Phishy <span>Bot</span>
+      </div>
+      <button class="mobile-menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="regole.html">Regole & Gruppi</a></li>
+        <li><a href="comandi.html">Comandi</a></li>
+        <li><a href="meme.html" class="active">Video Meme</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="section-block">
+      <h2><i class="fa-solid fa-film"></i> Video Meme</h2>
+
+      <div class="meme-feed">
+        <div class="meme-card" id="meme-1">
+          <h3>Quando il bot va offline nel momento sbagliato 💀</h3>
+          <div class="video-wrapper">
+            <video controls poster="assets/img/phishy-bored.png">
+              <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            </video>
+          </div>
+          
+          <div class="comments-section" style="margin-top:1rem;">
+            <h4>Commenti</h4>
+            <div id="comments-list-1"></div>
+            <form class="comment-form" onsubmit="addComment(event, 'meme-1')">
+              <input type="text" placeholder="Nome..." class="comment-author" required>
+              <input type="text" placeholder="Commento..." class="comment-text" required>
+              <button type="submit" class="btn btn-primary">Invia</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Phishy Bot 🐟 - Tutti i diritti riservati.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

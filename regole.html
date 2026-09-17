@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regole & Gruppi - Phishy Bot</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <img src="assets/img/avatar-logo.png" alt="Phishy Avatar" class="logo-img">
+        Phishy <span>Bot</span>
+      </div>
+      <button class="mobile-menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="regole.html" class="active">Regole & Gruppi</a></li>
+        <li><a href="comandi.html">Comandi</a></li>
+        <li><a href="meme.html">Video Meme</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2 class="page-title" >  <i class="fa-solid fa-layer-group"></i> I Nostri Gruppi</h2>
+    <p class="page-subtitle" >Clicca su uno dei gruppi per leggere le sue regole</p>
+
+    <!-- 4 SCHEDE GRUPPI -->
+    <div class="grid-cards">
+      <div class="group-card" id="card-viridi" onclick="showInlineRules('viridi')">
+        <img src="assets/img/phishy-gun.png" alt="Viridi Celesti">
+        <div class="group-card-info">
+          <h3>Viridi Celesti</h3>
+          <p  class="text-pulse-glow" style="font-size:0.85rem; color:var(--text-muted);">Gruppo Ufficiale & Chat</p>
+        </div>
+      </div>
+
+      <div class="group-card" id="card-iq" onclick="showInlineRules('iq')">
+        <img src="assets/img/phishy-anime.jpg" alt="IQ Negativo">
+        <div class="group-card-info">
+          <h3>IQ Negativo</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">Meme & Chat Libera</p>
+        </div>
+      </div>
+
+      <div class="group-card" id="card-spam" onclick="showInlineRules('spam')">
+        <img src="assets/img/phishy-bored.png" alt="Spam">
+        <div class="group-card-info">
+          <h3 style="color:var(--accent-pink);">Spam & Bot</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">Area test comandi</p>
+        </div>
+      </div>
+
+      <div class="group-card" id="card-guerre" onclick="showInlineRules('guerre')">
+        <img src="assets/img/bg-matrix.jpg" alt="Guerre Statali">
+        <div class="group-card-info">
+          <h3 style="color:var(--accent-purple);">Guerre Statali</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">Strategie & Sfide</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANNELLO REGOLE INTEGRATO NELLA PAGINA -->
+    <div id="inlineRulesContainer" class="rules-inline-panel hidden">
+      <div class="panel-header">
+        <h3 id="rulesTitle">Titolo Gruppo</h3>
+        <span style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-shield-cat"></i> trovi il riassunto del regolamento nella bio di ogniuno dei gruppi</span>
+      </div>
+      <div class="rules-list" id="rulesContent">
+        <!-- Regole caricate da JS -->
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Phishy Bot 🐟 - Tutti i diritti riservati.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comandi - Phishy Bot</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="page-matrix">
+
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <img src="assets/img/avatar-logo.png" alt="Phishy Avatar" class="logo-img">
+        Phishy <span>Bot</span>
+      </div>
+      <button class="mobile-menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="regole.html">Regole & Gruppi</a></li>
+        <li><a href="comandi.html" class="active">Comandi</a></li>
+        <li><a href="meme.html">Video Meme</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="section-block">
+      <h2><i class="fa-solid fa-terminal"></i> Menu Comandi</h2>
+      
+      <div class="search-filter-box">
+        <input type="text" id="commandSearch" placeholder="Cerca comando..." onkeyup="filterCommands()">
+        <div class="category-buttons">
+          <button class="cat-btn active" onclick="filterCategory('all')">Tutti</button>
+          <button class="cat-btn" onclick="filterCategory('tools')">Tools</button>
+          <button class="cat-btn" onclick="filterCategory('fun')">Fun</button>
+          <button class="cat-btn" onclick="filterCategory('admin')">Admin</button>
+        </div>
+      </div>
+
+      <div class="commands-grid">
+        <div class="cmd-card" data-category="tools">
+          <h3 style="color:#25d366">.webview</h3>
+          <p>Apre la classifica live interattiva.</p>
+          <small>Uso: <code>.webview &lt;url&gt;</code></small>
+        </div>
+        <div class="cmd-card" data-category="fun">
+          <h3 style="color:#25d366">.sticker / .s</h3>
+          <p>Crea uno sticker da foto/video.</p>
+          <small>Uso: Rispondi con <code>.s</code></small>
+        </div>
+        <div class="cmd-card" data-category="admin">
+          <h3 style="color:#25d366">.kick</h3>
+          <p>Rimuove un utente dal gruppo.</p>
+          <small>Uso: <code>.kick @utente</code></small>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Phishy Bot 🐟 - Tutti i diritti riservati.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
