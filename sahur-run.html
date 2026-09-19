@@ -163,7 +163,7 @@ button:focus-visible{outline:4px solid var(--cream);outline-offset:3px}
       <svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="slash" d="M4 4l16 16" stroke="#ef476f" stroke-width="3" stroke-linecap="round"/></svg>
     </button>
     <div class="logo"><span class="a">Sahur</span><span class="b">Run</span></div>
-    <p class="tag">Tung Tung Tung Sahur ti sta inseguendo. Non farti prendere.</p>
+    <p class="tag" id="menuTag">Tung Tung Tung Sahur ti sta inseguendo. Non farti prendere.</p>
     <div class="spacer"></div>
     <div class="skin-name" id="skinName">Jake</div>
     <div class="skins" id="skins">
@@ -194,7 +194,7 @@ button:focus-visible{outline:4px solid var(--cream);outline-offset:3px}
   <div id="pause" class="screen hidden">
     <div class="card">
       <h2>Pausa</h2>
-      <p>Il gioco è fermo. Sahur aspetta.</p>
+      <p id="pauseText">Il gioco è fermo. Sahur aspetta.</p>
       <button class="play" id="btnResume">Riprendi</button>
       <button class="ghost" id="btnQuit">Esci al menu</button>
     </div>
@@ -209,6 +209,26 @@ button:focus-visible{outline:4px solid var(--cream);outline-offset:3px}
 <script>
 (function(){
 'use strict';
+
+/* =====================================================================
+   CONFIGURAZIONE SVILUPPATORE (DEV CONFIG)
+   Modifica qui il nome dell'inseguitore e il percorso dell'immagine PNG.
+===================================================================== */
+const DEV_CONFIG = {
+  chaserName: "varesi",             // Nome personalizzato dell'inseguitore
+  chaserImage: "assets/vare.png"   // Percorso immagine PNG nella cartella assets
+};
+
+const CHASER_NAME = (DEV_CONFIG.chaserName && DEV_CONFIG.chaserName.trim() !== "") 
+  ? DEV_CONFIG.chaserName 
+  : "Tung Tung Sahur";
+
+function applyDynamicTexts(){
+  const menuTag = document.getElementById('menuTag');
+  if(menuTag) menuTag.textContent = `${CHASER_NAME} ti sta inseguendo. Non farti prendere.`;
+  const pauseText = document.getElementById('pauseText');
+  if(pauseText) pauseText.textContent = `Il gioco è fermo. ${CHASER_NAME} aspetta.`;
+}
 
 /* =====================================================================
    Utilità
@@ -522,7 +542,7 @@ function poseRunner(r,mode,p,k){
 }
 
 /* =====================================================================
-   Tung Tung Tung Sahur (versione polizia)
+   Inseguitore Custom / Tung Tung Sahur
 ===================================================================== */
 function drawWood(g,w,h){
   g.fillStyle='#c98b4d'; g.fillRect(0,0,w,h);
@@ -540,7 +560,7 @@ function drawWood(g,w,h){
 }
 function drawFace(g,w,h){
   g.clearRect(0,0,w,h);
-  const U=502, V=341;                  // px per unità mondo (arco 1.02 x 1.5 su 512x512)
+  const U=502, V=341;
   const cy=(2.1-1.72)*V;
   const eye=(cx,sx)=>{
     g.fillStyle='#fff'; g.strokeStyle='#1a0f0a'; g.lineWidth=8;
@@ -564,8 +584,11 @@ function drawFace(g,w,h){
     rr(g,mx0+20+i*bw+2,my1-44,bw-4,38,7); g.fill(); g.stroke();
   }
 }
+
 function buildChaser(){
   const root=new THREE.Group(); const log=new THREE.Group(); root.add(log);
+  
+  // Modello 3D procedurale originale
   const wood=canvasTex(256,256,drawWood,true); wood.repeat.set(2,1);
   const endM=M(0x8a5a2b);
   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.56,0.56,1.5,24),[M(0xffffff,{map:wood}),endM,endM]);
@@ -573,20 +596,17 @@ function buildChaser(){
   const faceM=M(0xffffff,{map:canvasTex(512,512,drawFace,false),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
   const face=new THREE.Mesh(new THREE.CylinderGeometry(0.575,0.575,1.5,24,1,true,Math.PI-0.885,1.77),faceM);
   face.position.y=1.35; log.add(face);
-  // cintura + fibbia
   const belt=new THREE.Mesh(new THREE.CylinderGeometry(0.585,0.585,0.16,24),M(0x1b2a5c)); belt.position.y=0.76; log.add(belt);
   log.add(bx(0.16,0.12,0.04,M(0xffc93c),0,0.76,-0.59));
-  // cappello da poliziotto
   const navy=M(0x1b2a5c);
   const crown=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.55,0.24,24),navy); crown.position.y=2.22; log.add(crown);
   log.add(bx(0.62,0.05,0.34,M(0x0f1836),0,2.13,-0.62));
   const band=new THREE.Mesh(new THREE.CylinderGeometry(0.556,0.556,0.05,24),M(0xffc93c)); band.position.y=2.13; log.add(band);
   const badge=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.03,16),M(0xffc93c)); badge.rotation.x=Math.PI/2; badge.position.set(0,2.25,-0.52); log.add(badge);
-  // sirena
   log.add(bx(0.34,0.06,0.16,M(0x555b6e),0,2.37,0));
   const sirenR=new THREE.MeshBasicMaterial({color:0xff2244}), sirenB=new THREE.MeshBasicMaterial({color:0x2c6bff});
   log.add(sp(0.09,sirenR,0.1,2.45,0,10,8)); log.add(sp(0.09,sirenB,-0.1,2.45,0,10,8));
-  // arti a bastoncino
+  
   const stickM=M(0x5a3a1c), handM=M(0x6b4423);
   const stick=(len,r)=>new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,8),stickM);
   function makeArm(sx){
@@ -602,8 +622,56 @@ function buildChaser(){
   const armL=makeArm(-1), armR=makeArm(1), legL=makeLeg(-1), legR=makeLeg(1);
   const bat=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.14,1.3,12),M(0xe2b878)); bat.position.y=-1.37; armR.add(bat);
   const tape=new THREE.Mesh(new THREE.CylinderGeometry(0.052,0.052,0.22,10),M(0x1b2a5c)); tape.position.y=-0.86; armR.add(tape);
-  return {root:root,log:log,armL:armL,armR:armR,legL:legL,legR:legR,sirenR:sirenR,sirenB:sirenB,faceAngle:Math.PI};
+
+  // Mesh per immagine PNG personalizzata
+  const customGeo = new THREE.PlaneGeometry(1.8, 2.4);
+  const customMat = new THREE.MeshBasicMaterial({
+    transparent: true,
+    alphaTest: 0.1,
+    side: THREE.DoubleSide,
+    visible: false
+  });
+  const customMesh = new THREE.Mesh(customGeo, customMat);
+  customMesh.position.set(0, 1.2, 0);
+  root.add(customMesh);
+
+  // Caricamento della texture PNG custom
+  if (DEV_CONFIG.chaserImage && DEV_CONFIG.chaserImage.trim() !== "") {
+    new THREE.TextureLoader().load(
+      DEV_CONFIG.chaserImage,
+      (tex) => {
+        const img = tex.image;
+        if (img && img.width && img.height) {
+          const aspect = img.width / img.height;
+          customMesh.scale.set(aspect, 1, 1);
+        }
+        customMat.map = tex;
+        customMat.needsUpdate = true;
+        customMat.visible = true;
+
+        // Nasconde il modello 3D procedurale in caso di successo
+        log.visible = false;
+        armL.visible = false;
+        armR.visible = false;
+        legL.visible = false;
+        legR.visible = false;
+      },
+      undefined,
+      (err) => {
+        console.warn("Impossibile caricare il PNG personalizzato. Ripristino modello originale.", err);
+        customMat.visible = false;
+        log.visible = true;
+        armL.visible = true;
+        armR.visible = true;
+        legL.visible = true;
+        legR.visible = true;
+      }
+    );
+  }
+
+  return {root:root,log:log,armL:armL,armR:armR,legL:legL,legR:legR,sirenR:sirenR,sirenB:sirenB,faceAngle:Math.PI,customMesh:customMesh};
 }
+
 function poseChaser(C,mode,ph,t){
   C.legL.rotation.x=Math.sin(ph)*0.9; C.legR.rotation.x=-Math.sin(ph)*0.9;
   if(mode==='attack'){
@@ -623,6 +691,11 @@ function poseChaser(C,mode,ph,t){
   C.log.rotation.z=Math.sin(ph)*0.05;
   const on=Math.floor(t*4)%2===0;
   C.sirenR.color.setHex(on?0xff2244:0x5a0f1a); C.sirenB.color.setHex(on?0x102550:0x2c6bff);
+
+  if (C.customMesh && C.customMesh.material.visible) {
+    C.customMesh.rotation.y = C.log.rotation.y + Math.PI;
+    C.customMesh.rotation.z = C.log.rotation.z;
+  }
 }
 
 /* =====================================================================
@@ -1153,6 +1226,7 @@ document.querySelectorAll('.skin').forEach(b=>b.addEventListener('click',()=>sel
 /* =====================================================================
    Avvio
 ===================================================================== */
+applyDynamicTexts();
 resize();
 refreshSkinUI(); refreshSndUI();
 goMenu();
