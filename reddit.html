@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phishy Bot 🐟</title>
+  <title>Reddit - Phishy Bot 🐟</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -17,31 +17,28 @@
       </div>
       <button class="mobile-menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
       <ul class="nav-links" id="navLinks">
-        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="index.html">Home</a></li>
         <li><a href="regole.html">Regole & Gruppi</a></li>
         <li><a href="comandi.html">Comandi</a></li>
-        <li><a href="reddit.html">Reddit</a></li>
         <li><a href="meme.html">Video Meme</a></li>
+        <li><a href="reddit.html" class="active">Reddit</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
-    <section class="hero">
-      <img src="assets/img/avatar-logo.png" alt="Phishy Bot" class="hero-avatar">
+    <section class="hero" style="flex-direction: column; text-align: center;">
       <div>
-        <h1>Benvenuto su <span class="green">Phishy</span> <span class="pink">Bot</span> 🐟</h1>
-        <p>Il bot definitivo per moderazione, classifiche e divertimento nei tuoi gruppi WhatsApp!</p>
+        <h1>Contenuto da <span class="green">Reddit</span> 🤖</h1>
+        <p>Dai un'occhiata al sondaggio interattivo direttamente da Reddit[cite: 2]:</p>
         
-        <div class="hero-buttons">
-          <!-- BOTTONE PROVVISORIO PROFILI UTENTI -->
-          <button class="btn btn-disabled" onclick="alert('Sezione profili utenti in fase di sviluppo!')">
-            <i class="fa-solid fa-user-gear"></i> Profili Utenti (In Arrivo)
-          </button>
-          
-          <a href="regole.html" class="btn btn-secondary">
-            <i class="fa-solid fa-users"></i> Vedi i Gruppi
-          </a>
+        <div class="reddit-embed-container" style="margin-top: 30px; display: flex; justify-content: center;">
+          <blockquote class="reddit-embed-bq" style="height:316px" data-embed-height="316">
+            <a href="https://www.reddit.com/r/BunnyTrials/comments/1wm9j8i/tech_or_money/">Tech or money?</a><br> by
+            <a href="https://www.reddit.com/user/Dry-Concern-7546/">u/Dry-Concern-7546</a> in
+            <a href="https://www.reddit.com/r/BunnyTrials/">BunnyTrials</a>
+          </blockquote>
+          <script async="" src="https://embed.reddit.com/widgets.js" charset="UTF-8"></script>
         </div>
       </div>
     </section>
