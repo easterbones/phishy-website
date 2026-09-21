@@ -751,7 +751,7 @@ const POWERUP_TYPES={
   BOOTS:{ type:'boots', name:'Stivali Super', icon:'👟', duration:8, color:0x3ddc97 },
   MULT:{ type:'mult', name:'2X Punti', icon:'✖️', duration:10, color:0xffc93c },
   JETPACK:{ type:'jetpack', name:'Jetpack', icon:'🚀', duration:5, color:0x2f8bff },
-  POGO:{ type:'pogo', name:'Pogo Stick', icon:'🦘', duration:0, color:0xf28c28 }
+  POGO:{ type:'pogo', name:'Pogo Stick', icon:'🦘', duration:9, color:0xf28c28 }
 };
 
 function createPowerupMesh(typeKey){
@@ -815,22 +815,62 @@ function train(lane,z0,len,isMoving=false){
   g.add(bx(1.3,0.2,len-1.5,mat.roof,0,3.5,0));
   g.position.set(lane*LANE_W,0,zc); scene.add(g);
   obstacles.push({
-    type:'train',mesh:g,x:lane*LANE_W,z:zc,hz:len/2,hw:0.85,y0:0,y1:3.5,
+    type:'train',mesh:g,x:lane*LANE_W,z:zc,hz:len/2,hw:0.85,y0:0,y1:3.5,roofY:3.5,
     moving:isMoving, speed:isMoving?rand(12,18):0, len:len
   });
 }
 
-// Rampa per salire sui treni
-function ramp(lane,z0){
+// Rampa per salire sui treni.
+// trainFrontZ = bordo anteriore del treno, cioè il lato che il giocatore incontra.
+// La rampa finisce esattamente lì: niente salto obbligatorio e niente spazio vuoto.
+const RAMP_LEN = 4.0;
+const RAMP_HEIGHT = 3.5;
+
+function ramp(lane, trainFrontZ){
   const g=new THREE.Group();
-  const rShape=new THREE.Shape();
-  rShape.moveTo(0,0); rShape.lineTo(0,0.1); rShape.lineTo(3.2,3.2); rShape.lineTo(3.2,0); rShape.closePath();
-  const extrudeSettings = { depth: 1.7, bevelEnabled: false };
-  const geoR = new THREE.ExtrudeGeometry(rShape, extrudeSettings);
-  geoR.rotateY(-Math.PI/2); geoR.translate(0.85,0,-1.6);
-  const mRamp=new THREE.Mesh(geoR,mat.yb); g.add(mRamp);
-  g.position.set(lane*LANE_W,0,z0); scene.add(g);
-  obstacles.push({type:'ramp',mesh:g,x:lane*LANE_W,z:z0,hz:1.6,hw:0.85,y0:0,y1:3.2});
+
+  // Prisma a cuneo:
+  // +Z = ingresso basso della rampa
+  // -Z = uscita alta, coincidente con il tetto del treno.
+  const w=1.82, L=RAMP_LEN, H=RAMP_HEIGHT;
+  const x0=-w/2, x1=w/2, z0=L/2, z1=-L/2;
+  const verts=new Float32Array([
+    x0,0,z0,  x1,0,z0,  x0,H,z1,  x1,H,z1,
+    x0,0,z1,  x1,0,z1
+  ]);
+  const idx=[
+    0,1,3, 0,3,2,       // superficie inclinata
+    0,4,5, 0,5,1,       // fondo
+    0,2,4,               // lato sinistro
+    1,5,3,               // lato destro
+    2,3,5, 2,5,4        // estremità alta
+  ];
+  const geoR=new THREE.BufferGeometry();
+  geoR.setAttribute('position',new THREE.BufferAttribute(verts,3));
+  geoR.setIndex(idx);
+  geoR.computeVertexNormals();
+
+  const mRamp=new THREE.Mesh(geoR,mat.yb);
+  mRamp.position.y=0;
+  g.add(mRamp);
+
+  // Il bordo alto della rampa coincide con il bordo del treno.
+  const centerZ=trainFrontZ + L/2;
+  g.position.set(lane*LANE_W,0,centerZ);
+  scene.add(g);
+
+  obstacles.push({
+    type:'ramp',
+    mesh:g,
+    x:lane*LANE_W,
+    z:centerZ,
+    hz:L/2,
+    hw:w/2,
+    y0:0,
+    y1:H,
+    topZ:trainFrontZ,
+    length:L
+  });
 }
 
 // Tunnel, Sottopassaggi corti e Ponti
@@ -903,10 +943,17 @@ const PATTERNS=[
   {min:0.1,f:z=>{ const h=pick(LANES); highBar(h,z-3); coinLine(h,z,6,1.3,0.6); return 10; }},
   {min:0.12,f:z=>{
       const tLane=pick(LANES);
-      ramp(tLane, z-2);
-      train(tLane, z-5, 16);
-      coinLine(tLane, z-5, 8, 1.8, 4.2);
-      return 22;
+      const len=16;
+      const trainZ=z-5;
+      train(tLane, trainZ, len);
+
+      // Bordo anteriore del treno e rampa perfettamente collegati.
+      const trainFront=trainZ-len/2;
+      ramp(tLane, trainFront);
+
+      // Monete sopra il tetto, non nel vuoto davanti alla rampa.
+      coinLine(tLane, trainFront-1.0, 8, 1.8, 4.25);
+      return 24;
   }},
   {min:0.15,f:z=>{ for(const l of LANES) lowBar(l,z-4); coinArc(pick(LANES),z-0.4,7,1.2,1.5); return 12; }},
   // Treni in movimento
@@ -949,7 +996,7 @@ function spawnPattern(z){
   
   // Chance di spawnare un Powerup
   if(Math.random()<0.28){
-    const pk=pick(Object.keys(POWERUP_TYPES));
+    const pk=pick(['JETPACK','MAGNET','BOOTS','MULT']);
     spawnPowerup(pick(LANES)*LANE_W, 1.2, z-2, pk);
   }
 
@@ -1034,7 +1081,8 @@ const G={
   speed:0,dist:0,coins:0,playTime:0,slow:1,lane:0,prevLane:0,x:0,y:0,vy:0,onGround:true,
   rollT:0,wantRoll:false,jumpBuf:0,dangerT:0,invul:0,stumbleT:0,deadT:0,shake:0,cursor:-48,first:true,
   runPh:0,beat:0,beatI:0,faceY:0,overShown:false,bounce:0,hintT:0,finalScore:0,isBest:false,prevState:'menu',seenHint:false,
-  powerupTimers:{ magnet:0, boots:0, mult:0, jetpack:0 }
+  powerupTimers:{ magnet:0, boots:0, mult:0, jetpack:0 },
+  isPogo:false, pogoStarted:false, pogoTime:0
 };
 let R=runners[G.skin];
 const scoreEl=$('score'), coinEl=$('coinN'), bestEl=$('best'), powerupHudEl=$('powerupHud');
@@ -1055,7 +1103,8 @@ function resetRun(){
   Object.assign(G,{
     speed:0,dist:0,coins:0,playTime:0,slow:1,lane:0,prevLane:0,x:0,y:0,vy:0,onGround:true,rollT:0,wantRoll:false,
     jumpBuf:0,dangerT:0,invul:0,stumbleT:0,deadT:0,shake:0,first:true,runPh:0,beat:0,beatI:0,overShown:false,cursor:-48,
-    powerupTimers:{ magnet:0, boots:0, mult:0, jetpack:0 }
+    powerupTimers:{ magnet:0, boots:0, mult:0, jetpack:0 },
+    isPogo:false, pogoStarted:false, pogoTime:0, pogoTime:0
   });
   for(const o of obstacles) scene.remove(o.mesh);
   obstacles.length=0;
@@ -1120,6 +1169,11 @@ function showOver(){
 
 function updatePowerupHUD(){
   powerupHudEl.innerHTML='';
+  if(G.isPogo){
+    const div=document.createElement('div'); div.className='pu-badge';
+    div.innerHTML=`<span>🦘</span> <b>Pogo ${G.pogoTime.toFixed(1)}s</b>`;
+    powerupHudEl.appendChild(div);
+  }
   for(const key in G.powerupTimers){
     const t = G.powerupTimers[key];
     if(t>0){
@@ -1135,13 +1189,48 @@ function activatePowerup(typeKey){
   sfx.powerup();
   const info=POWERUP_TYPES[typeKey];
   if(typeKey==='POGO'){
-    G.vy = 26; G.onGround = false;
+    activatePogo();
   } else if(typeKey==='JETPACK'){
     G.powerupTimers.jetpack = info.duration;
   } else {
     G.powerupTimers[info.type] = info.duration;
   }
   updatePowerupHUD();
+}
+
+function activatePogo(){
+  // Pogo fisico: il giocatore salta automaticamente e rimbalza a ogni atterraggio.
+  // Non viene teletrasportato a 16 unità di altezza e non può quindi "camminare in aria".
+  if(G.isPogo) return;
+
+  G.isPogo=true;
+  G.pogoStarted=true;
+  G.pogoTime=POWERUP_TYPES.POGO.duration;
+  G.vy=18.5;
+  G.onGround=false;
+  G.rollT=0;
+  G.wantRoll=false;
+
+  // Sequenza di monete SOLO davanti al giocatore.
+  // La prima è già abbastanza vicina da essere raggiungibile, ma non nasce alle sue spalle.
+  const lane=G.lane;
+  const startZ=-9;
+  const steps=18;
+  const stepZ=2.7;
+
+  for(let i=0;i<steps;i++){
+    const z=startZ-i*stepZ;
+    const phase=i/(steps-1);
+    const y=1.25 + Math.sin(phase*Math.PI)*3.4;
+    spawnCoin(lane*LANE_W,y,z);
+  }
+
+  // Alla fine della sequenza compare un power-up raggiungibile.
+  const endZ=startZ-steps*stepZ-2;
+  spawnPowerup(lane*LANE_W,1.6,endZ,pick(['JETPACK','MAGNET','BOOTS','MULT']));
+
+  updatePowerupHUD();
+  sfx.powerup();
 }
 
 function doJump(){
@@ -1160,14 +1249,45 @@ function actLane(d){
   G.prevLane=G.lane; G.lane=n; sfx.swipe();
 }
 
+function getSurfaceY(){
+  // Il giocatore resta fisicamente a z=0; il mondo scorre verso di lui.
+  // Quindi una superficie è valida solo quando il suo volume attraversa z=0.
+  let surfaceY=0;
+  let surface=null;
+
+  for(const o of obstacles){
+    if(o.dead) continue;
+    const zf=o.z+o.hz, zb=o.z-o.hz;
+
+    if(0 < zb || 0 > zf) continue;
+    if(Math.abs(o.x-G.x)>o.hw+0.18) continue;
+
+    if(o.type==='train'){
+      // Il tetto è piatto e può essere calpestato.
+      if(o.y1>surfaceY){
+        surfaceY=o.y1;
+        surface=o;
+      }
+    } else if(o.type==='ramp'){
+      // La rampa sale da y=0 sul lato +Z a y=3.5 sul lato -Z.
+      const t=clamp((o.z+o.hz)/o.length,0,1);
+      const rampY=o.y0+(o.y1-o.y0)*t;
+
+      if(rampY>surfaceY){
+        surfaceY=rampY;
+        surface=o;
+      }
+    }
+  }
+
+  return {y:surfaceY, obstacle:surface};
+}
+
 function onHit(o,dz){
   if(G.powerupTimers.jetpack > 0) return; // Invulnerabile durante il Jetpack
 
-  // Gestione Rampa
-  if(o.type==='ramp'){
-    G.y = 3.2; G.vy = 0; G.onGround = true;
-    return;
-  }
+  // La rampa non e' un ostacolo da colpire frontalmente: e' una superficie.
+  if(o.type==='ramp') return;
 
   const frontal=(o.z+o.hz-dz)<-0.3;
   if(G.dangerT>0||(o.type==='train'&&frontal)){ die(); return; }
@@ -1231,17 +1351,62 @@ function updateRun(dt){
   const tx=G.lane*LANE_W;
   G.x+=(tx-G.x)*Math.min(1,dt*13);
 
-  // Volo Jetpack
+  // Superficie dinamica: terra, rampa o tetto del treno.
+  // Questo e' il cuore della collisione verticale introdotta nel test Gemini.
+  const surfaceBefore=getSurfaceY();
+  const currentGroundY=surfaceBefore.y;
+
+  // Volo Jetpack / Pogo / salto normale
   if(G.powerupTimers.jetpack > 0){
     G.y += (6.5 - G.y) * Math.min(1, dt * 6);
     G.vy = 0; G.onGround = false;
     if(Math.random()<0.3) spawnCoin(G.x, G.y-0.8, -0.5);
-  } else if(!G.onGround){
-    G.vy-=GRAV*dt; G.y+=G.vy*dt;
-    if(G.y<=0){
-      G.y=0; G.vy=0; G.onGround=true;
-      if(G.wantRoll){ G.wantRoll=false; G.rollT=ROLL_T; sfx.roll(); }
-      else if(G.jumpBuf>0){ doJump(); }
+  } else {
+    const appliedGrav=GRAV;
+
+    // Pogo = salto automatico continuo. La gravità resta normale:
+    // niente "galleggiamento" e niente camminata a mezz'aria.
+    if(G.isPogo){
+      G.pogoTime=Math.max(0,G.pogoTime-dt);
+
+      if(!G.onGround || G.y>currentGroundY+0.001){
+        G.vy-=appliedGrav*dt;
+        const previousY=G.y;
+        G.y+=G.vy*dt;
+
+        if(G.vy<=0 && previousY>=currentGroundY && G.y<=currentGroundY){
+          G.y=currentGroundY;
+          G.vy=17.5;
+          G.onGround=false;
+          G.pogoStarted=true;
+          sfx.jump();
+        }
+      } else {
+        G.y=currentGroundY;
+        G.vy=17.5;
+        G.onGround=false;
+      }
+
+      if(G.pogoTime<=0){
+        G.isPogo=false;
+        G.pogoStarted=false;
+        G.vy=Math.min(G.vy,10);
+      }
+    } else if(!G.onGround || G.y>currentGroundY+0.001){
+      G.vy-=appliedGrav*dt;
+      const previousY=G.y;
+      G.y+=G.vy*dt;
+
+      if(G.vy<=0 && previousY>=currentGroundY && G.y<=currentGroundY){
+        G.y=currentGroundY;
+        G.vy=0;
+        G.onGround=true;
+        if(G.wantRoll){ G.wantRoll=false; G.rollT=ROLL_T; sfx.roll(); }
+        else if(G.jumpBuf>0){ doJump(); }
+      }
+    } else {
+      G.y=currentGroundY;
+      G.onGround=true;
     }
   }
 
@@ -1257,6 +1422,9 @@ function updateRun(dt){
       const zf=o.z+o.hz, zb=o.z-o.hz;
       if(zf<-0.35||zb-dz>0.35) continue;
       if(Math.abs(o.x-G.x)>o.hw+0.25) continue;
+      // Se siamo sopra il tetto, l'ostacolo e' sotto i piedi: non e' una collisione.
+      if(o.type==='train' && G.y>=o.y1-0.35) continue;
+      if(o.type==='ramp') continue;
       if(top<=o.y0+0.08||G.y>=o.y1-0.08) continue;
       onHit(o,dz); break;
     }
