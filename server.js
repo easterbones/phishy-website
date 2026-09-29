@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-// INSERISCI QUI LA TUA STRINGA DI CONNESSIONE A MONGODB ATLAS (La stessa del config.js del bot)
+// INSERISCI QUI LA TUA STRINGA DI CONNESSIONE A MONGODB ATLAS
 const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://iosonoio:lePaperechevolano2308@viridi.gryel56.mongodb.net/?appName=viridi';
 
 mongoose.connect(mongoURI)
@@ -57,8 +57,20 @@ app.get('/api/profilo/:numero', async (req, res) => {
     }
 });
 
-// Avvia il server
+// Avvia il server e recupera l'IP pubblico
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server web e API avviati sulla porta ${PORT}`);
+app.listen(PORT, async () => {
+    console.log(`✅ Server web e API avviati sulla porta ${PORT}`);
+    
+    try {
+        // Recupera l'IP pubblico tramite il servizio ipify
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        console.log(`\n========================================`);
+        console.log(`🌍 Il tuo Indirizzo IP pubblico è: ${ipData.ip}`);
+        console.log(`👉 Aggiungi questo IP alla Whitelist di MongoDB Atlas.`);
+        console.log(`========================================\n`);
+    } catch (error) {
+        console.log('⚠️ Impossibile recuperare l\'indirizzo IP pubblico in automatico.');
+    }
 });
