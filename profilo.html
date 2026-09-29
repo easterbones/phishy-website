@@ -1,86 +1,63 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phishy Bot - Profilo 🐟</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    .search-container {
-      text-align: center;
-      margin: 40px auto;
-      max-width: 500px;
-      padding: 20px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 15px;
-    }
-    .search-input {
-      width: 80%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #ff69b4; /* pink theme */
-      background: #222;
-      color: white;
-      font-size: 16px;
-      margin-bottom: 15px;
-    }
-    .profile-card {
-      display: none; /* Nascosto finché non si cerca */
-      max-width: 500px;
-      margin: 0 auto;
-      background: #1e1e1e;
-      border: 2px solid #00ff7f; /* green theme */
-      border-radius: 15px;
-      padding: 20px;
-      text-align: left;
-    }
-    .profile-card h2 { color: #ff69b4; text-align: center; }
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px solid #333;
-      padding: 10px 0;
-    }
-    .error-msg { color: #ff4d4d; display: none; text-align: center; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerca Profilo Utente</title>
+    <!-- Aggiungo Bootstrap per la grafica di base -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 50px;
+        }
+        .profile-card {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <nav class="navbar">
-      <div class="logo">
-        <img src="assets/img/avatar-logo.png" alt="Phishy Avatar" class="logo-img">
-        Phishy <span>Bot</span>
-      </div>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="profilo.html" class="active">Profilo</a></li>
-      </ul>
-    </nav>
-  </header>
 
-  <main>
-    <div class="search-container">
-      <h2>Cerca il tuo Profilo WhatsApp</h2>
-      <p>Inserisci il tuo numero di telefono (con prefisso internazionale, es: 39333...)</p>
-      <input type="text" id="numeroInput" class="search-input" placeholder="es. 393331234567">
-      <button class="btn btn-secondary" onclick="cercaUtente()">Cerca</button>
-      <p id="errorMsg" class="error-msg">❌ Utente non trovato. Hai mai scritto al bot?</p>
+<div class="container">
+    <h2 class="text-center mb-4">Cerca Profilo Bot</h2>
+    
+    <div class="input-group mb-3">
+        <input type="text" id="numeroInput" class="form-control" placeholder="Inserisci il numero (es. 393401234567)">
+        <button id="btnCerca" class="btn btn-secondary">Cerca</button>
     </div>
 
-    <div id="profileResult" class="profile-card">
-      <h2 id="pName">Nome Utente</h2>
-      <div class="stat-row"><span>🎮 Livello</span> <span id="pLevel">0</span></div>
-      <div class="stat-row"><span>🏅 Rank</span> <span id="pRole">Novellino</span></div>
-      <div class="stat-row"><span>❤️ Salute</span> <span id="pHealth">0</span></div>
-      <div class="stat-row"><span>💞 Vite Extra</span> <span id="pVita">0</span></div>
-      <div class="stat-row"><span>🍬 Dolci</span> <span id="pLimit">0</span></div>
-      <div class="stat-row"><span>🏦 Banca</span> <span id="pCredito">0</span></div>
-      <div class="stat-row"><span>🪙 Token</span> <span id="pJoin">0</span></div>
-      <div class="stat-row"><span>⭐ Esperienza</span> <span id="pExp">0</span></div>
-    </div>
-  </main>
+    <!-- Messaggio di Errore -->
+    <div id="errorMsg" class="alert alert-danger" style="display: none; text-align: center;"></div>
 
-  <script src="profilo-web.js"></script>
+    <!-- Risultati Profilo -->
+    <div id="profileResult" class="profile-card" style="display: none;">
+        <h3 id="pName" class="text-center mb-3">👤 Utente</h3>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item bg-transparent border-dark"><strong>Livello:</strong> <span id="pLevel"></span></li>
+            <li class="list-group-item bg-transparent border-dark"><strong>Ruolo:</strong> <span id="pRole"></span></li>
+            <li class="list-group-item bg-transparent border-dark"><strong>Salute:</strong> <span id="pHealth"></span></li>
+            <li class="list-group-item bg-transparent border-dark"><strong>Vita:</strong> <span id="pVita"></span></li>
+            <li class="list-group-item bg-transparent border-dark"><strong>Limite:</strong> <span id="pLimit"></span></li>
+            <li class="list-group-item bg-transparent border-dark"><strong>Credito:</strong> <span id="pCredito"></span></li>
+            <li class="list-group-item bg-transparent border-dark"><strong>Join:</strong> <span id="pJoin"></span></li>
+            <li class="list-group-item bg-transparent border-dark"><strong>Esperienza:</strong> <span id="pExp"></span></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Collegamento al file JavaScript -->
+<script src="profilo-web.js"></script>
+
 </body>
 </html>
