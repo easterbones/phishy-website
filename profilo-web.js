@@ -13,24 +13,9 @@ async function cercaUtente() {
     }
 
     try {
-        const targetUrl = encodeURIComponent(`http://173.249.51.107:3000/api/profilo/${input}`);
-        const response = await fetch(`https://api.allorigins.win/get?url=${targetUrl}`);
-        
-        if (!response.ok) throw new Error('Errore di rete con il proxy');
-        
-        const proxyData = await response.json();
-        
-        // Selettore di sicurezza: controlla se la VPS ha risposto con una pagina web di errore invece del JSON
-        if (proxyData.contents && proxyData.contents.trim().startsWith('<')) {
-            throw new Error("Il server VPS ha restituito una pagina di errore. Controlla che il bot sia avviato e la porta 3000 sia aperta.");
-        }
-
-        let result;
-        try {
-            result = JSON.parse(proxyData.contents);
-        } catch (e) {
-            throw new Error("I dati ricevuti non sono validi (errore di lettura del database).");
-        }
+        // Chiama la route API locale del sito
+        const response = await fetch(`/api/profilo/${input}`);
+        const result = await response.json();
 
         if (result.success) {
             const user = result.data;
@@ -56,23 +41,18 @@ async function cercaUtente() {
     } catch (error) {
         console.error("Errore fetch API:", error);
         errorMsg.style.display = 'block';
-        errorMsg.innerText = "❌ " + (error.message || "Errore di connessione. Il bot potrebbe essere offline.");
+        errorMsg.innerText = "❌ Impossibile comunicare con il database.";
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const btnCerca = document.getElementById('btnCerca');
-    
-    if (btnCerca) {
-        btnCerca.addEventListener('click', cercaUtente);
-    }
+    if (btnCerca) btnCerca.addEventListener('click', cercaUtente);
 
     const inputField = document.getElementById('numeroInput');
     if (inputField) {
         inputField.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                cercaUtente();
-            }
+            if (e.key === 'Enter') cercaUtente();
         });
     }
 });
