@@ -1,5 +1,6 @@
 async function cercaUtente() {
-    const input = document.getElementById('numeroInput').value;
+    // Pulisce l'input tenendo solo i numeri, utile se qualcuno inserisce il "+"
+    const input = document.getElementById('numeroInput').value.replace(/[^0-9]/g, ''); 
     const errorMsg = document.getElementById('errorMsg');
     const profileResult = document.getElementById('profileResult');
     
@@ -14,9 +15,16 @@ async function cercaUtente() {
     }
 
     try {
-        // SOSTITUISCI "INDIRIZZO_IP_VPS" CON L'IP REALE DEL TUO SERVER
-        const response = await fetch(`http://173.249.51.107:3000/api/profilo/${input}`);
-        const result = await response.json();
+        // Utilizziamo un proxy HTTPS per trasformare la richiesta ed evitare il blocco Mixed Content
+        const targetUrl = encodeURIComponent(`http://173.249.51.107:3000/api/profilo/${input}`);
+        const response = await fetch(`https://api.allorigins.win/get?url=${targetUrl}`);
+        
+        if (!response.ok) throw new Error('Errore di rete con il proxy');
+        
+        const proxyData = await response.json();
+        
+        // Il proxy avvolge la risposta del tuo server dentro l'oggetto "contents", quindi la decodifichiamo
+        const result = JSON.parse(proxyData.contents);
 
         if (result.success) {
             const user = result.data;
@@ -28,7 +36,7 @@ async function cercaUtente() {
             document.getElementById('pHealth').innerText = user.health;
             document.getElementById('pVita').innerText = user.vita;
             
-            // Funzione per formattare i numeri (come l'avevi impostata tu)
+            // Funzione per formattare i numeri
             const formattaNum = (num) => String(num).replace(/\d/g, d => `${d}͏`);
             
             document.getElementById('pLimit').innerText = formattaNum(user.limit);
@@ -46,11 +54,11 @@ async function cercaUtente() {
     } catch (error) {
         console.error("Errore fetch API:", error);
         errorMsg.style.display = 'block';
-        errorMsg.innerText = "❌ Errore di connessione al bot. Il server potrebbe essere offline o l'IP è errato.";
+        errorMsg.innerText = "❌ Errore di connessione. Il bot potrebbe essere offline o irraggiungibile.";
     }
 }
 
-// Inizializza l'Event Listener solo quando l'HTML è stato caricato completamente
+// Inizializza gli eventi solo quando il DOM è completamente caricato
 document.addEventListener('DOMContentLoaded', () => {
     const btnCerca = document.getElementById('btnCerca');
     
@@ -58,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCerca.addEventListener('click', cercaUtente);
     }
 
-    // Aggiungo anche l'attivazione della ricerca premendo "Invio" sulla tastiera
     const inputField = document.getElementById('numeroInput');
     if (inputField) {
         inputField.addEventListener('keypress', function (e) {
