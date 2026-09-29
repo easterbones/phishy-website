@@ -15,7 +15,7 @@ async function cercaUtente() {
 
     try {
         // SOSTITUISCI "INDIRIZZO_IP_VPS" CON L'IP REALE DEL TUO SERVER
-        const response = await fetch(`http://INDIRIZZO_IP_VPS:3000/api/profilo/${input}`);
+        const response = await fetch(`http://173.249.51.107:3000/api/profilo/${input}`);
         const result = await response.json();
 
         if (result.success) {
