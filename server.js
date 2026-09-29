@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 // INSERISCI QUI LA TUA STRINGA DI CONNESSIONE A MONGODB ATLAS (La stessa del config.js del bot)
-const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://iosonoio:<db_password>@viridi.gryel56.mongodb.net/?appName=viridi';
+const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://iosonoio:lePaperechevolano2308@viridi.gryel56.mongodb.net/?appName=viridi';
 
 mongoose.connect(mongoURI)
     .then(() => console.log('🌐 Sito connesso con successo a MongoDB Atlas!'))
