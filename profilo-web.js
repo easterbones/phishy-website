@@ -1,10 +1,8 @@
 async function cercaUtente() {
-    // Pulisce l'input tenendo solo i numeri, utile se qualcuno inserisce il "+"
     const input = document.getElementById('numeroInput').value.replace(/[^0-9]/g, ''); 
     const errorMsg = document.getElementById('errorMsg');
     const profileResult = document.getElementById('profileResult');
     
-    // Resetta i messaggi e i risultati a ogni nuova ricerca
     errorMsg.style.display = 'none';
     profileResult.style.display = 'none';
     
@@ -15,7 +13,6 @@ async function cercaUtente() {
     }
 
     try {
-        // Utilizziamo un proxy HTTPS per trasformare la richiesta ed evitare il blocco Mixed Content
         const targetUrl = encodeURIComponent(`http://173.249.51.107:3000/api/profilo/${input}`);
         const response = await fetch(`https://api.allorigins.win/get?url=${targetUrl}`);
         
@@ -23,20 +20,27 @@ async function cercaUtente() {
         
         const proxyData = await response.json();
         
-        // Il proxy avvolge la risposta del tuo server dentro l'oggetto "contents", quindi la decodifichiamo
-        const result = JSON.parse(proxyData.contents);
+        // Selettore di sicurezza: controlla se la VPS ha risposto con una pagina web di errore invece del JSON
+        if (proxyData.contents && proxyData.contents.trim().startsWith('<')) {
+            throw new Error("Il server VPS ha restituito una pagina di errore. Controlla che il bot sia avviato e la porta 3000 sia aperta.");
+        }
+
+        let result;
+        try {
+            result = JSON.parse(proxyData.contents);
+        } catch (e) {
+            throw new Error("I dati ricevuti non sono validi (errore di lettura del database).");
+        }
 
         if (result.success) {
             const user = result.data;
             
-            // Popola i dati dell'HTML
-            document.getElementById('pName').innerText = `👤 ${user.name == 'Sconosciuto' ? 'Utente' : user.name}`;
+            document.getElementById('pName').innerText = `👤 ${user.name == 'Sconosciuto' ? 'Easter Bone' : user.name}`;
             document.getElementById('pLevel').innerText = user.level;
             document.getElementById('pRole').innerText = user.role;
             document.getElementById('pHealth').innerText = user.health;
             document.getElementById('pVita').innerText = user.vita;
             
-            // Funzione per formattare i numeri
             const formattaNum = (num) => String(num).replace(/\d/g, d => `${d}͏`);
             
             document.getElementById('pLimit').innerText = formattaNum(user.limit);
@@ -44,21 +48,18 @@ async function cercaUtente() {
             document.getElementById('pJoin').innerText = formattaNum(user.joincount);
             document.getElementById('pExp').innerText = formattaNum(user.exp);
             
-            // Mostra il blocco coi risultati
             profileResult.style.display = 'block';
         } else {
-            // Mostra l'errore ricevuto dal backend (es. "Utente non trovato")
             errorMsg.style.display = 'block';
             errorMsg.innerText = result.message;
         }
     } catch (error) {
         console.error("Errore fetch API:", error);
         errorMsg.style.display = 'block';
-        errorMsg.innerText = "❌ Errore di connessione. Il bot potrebbe essere offline o irraggiungibile.";
+        errorMsg.innerText = "❌ " + (error.message || "Errore di connessione. Il bot potrebbe essere offline.");
     }
 }
 
-// Inizializza gli eventi solo quando il DOM è completamente caricato
 document.addEventListener('DOMContentLoaded', () => {
     const btnCerca = document.getElementById('btnCerca');
     
