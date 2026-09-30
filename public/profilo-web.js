@@ -107,6 +107,16 @@ function render(u) {
     }));
 }
 
+// Legge il numero dall'URL: ?393534409026 | ?numero=393534409026 | /profilo/393534409026
+function numeroDaUrl() {
+    const dec = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
+    const p = new URLSearchParams(location.search);
+    let v = p.get('numero') || p.get('n') || p.get('tel') || p.get('num');
+    if (!v && location.search.length > 1 && !location.search.includes('=')) v = dec(location.search.slice(1));
+    if (!v) { const m = location.pathname.match(/\/profilo\/([^/]+)\/?$/); if (m) v = dec(m[1]); }
+    return (v || '').replace(/[^0-9]/g, '');
+}
+
 async function cercaUtente() {
     const input = $('numeroInput').value.replace(/[^0-9]/g, '');
     const err = $('errorMsg'), res = $('profileResult'), loader = $('loader');
@@ -122,7 +132,10 @@ async function cercaUtente() {
             return mostraErrore(`❌ Il server API non risponde come previsto (HTTP ${r.status}). Controlla API_BASE in profilo-web.js.`);
         }
         const json = await r.json();
-        if (json.success) { render(json.data); res.hidden = false; }
+        if (json.success) {
+            render(json.data); res.hidden = false;
+            if (location.pathname.endsWith('.html')) history.replaceState(null, '', '?' + input);
+        }
         else mostraErrore(json.message || 'Utente non trovato.');
     } catch (e) {
         console.error('Errore fetch API:', e);
@@ -134,6 +147,9 @@ async function cercaUtente() {
 
 document.addEventListener('DOMContentLoaded', () => {
     $('searchForm').addEventListener('submit', (e) => { e.preventDefault(); cercaUtente(); });
+
+    const n = numeroDaUrl();
+    if (n) { $('numeroInput').value = n; cercaUtente(); }
 
     const root = document.documentElement, btn = $('themeBtn');
     const applica = (t) => { root.dataset.theme = t; btn.textContent = t === 'dark' ? '☀️' : '🌙'; };
