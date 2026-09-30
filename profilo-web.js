@@ -1,3 +1,7 @@
+// URL del server del bot (quello che esegue main.js e ha la route /api/profilo).
+// Lascia '' solo se sito e bot sono sullo stesso dominio.
+const API_BASE = 'https://phishy-websites.onrender.com';
+
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('it-IT');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -113,7 +117,10 @@ async function cercaUtente() {
 
     loader.hidden = false;
     try {
-        const r = await fetch(`/api/profilo/${input}`);
+        const r = await fetch(`${API_BASE}/api/profilo/${input}`);
+        if (!(r.headers.get('content-type') || '').includes('application/json')) {
+            return mostraErrore(`❌ Il server API non risponde come previsto (HTTP ${r.status}). Controlla API_BASE in profilo-web.js.`);
+        }
         const json = await r.json();
         if (json.success) { render(json.data); res.hidden = false; }
         else mostraErrore(json.message || 'Utente non trovato.');
