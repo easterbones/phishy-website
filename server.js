@@ -1,76 +1,70 @@
 import express from 'express';
-import mongoose from 'mongoose';   
-import path from 'path';
-import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-// INSERISCI QUI LA TUA STRINGA DI CONNESSIONE A MONGODB ATLAS
-const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://iosonoio:lePaperechevolano2308@viridi.gryel56.mongodb.net/?appName=viridi' ;
+// La stringa di connessione va SOLO nelle variabili d'ambiente di Vercel (MONGODB_URI)
+const mongoURI = process.env.MONGODB_URI;
 
-mongoose.connect(mongoURI)
-    .then(() => console.log('🌐 Sito connesso con successo a MongoDB Atlas!'))
-    .catch(err => console.error('❌ Errore di connessione al DB:', err));
-
-// Schema identico a quello utilizzato dall'adapter del bot
 const DatabaseSchema = new mongoose.Schema({
     data: { type: Object, default: {} }
 }, { minimize: false });
 const Database = mongoose.models.Database || mongoose.model('Database', DatabaseSchema);
 
-// Dice ad Express di fornire i file HTML, CSS e JS statici dalla cartella principale
-app.use(express.static(__dirname));
+// Su Vercel ogni richiesta può girare in un'istanza "fredda": riusiamo la connessione tra le chiamate
+let connPromise = global._mongoConn;
+function connect() {
+    if (!mongoURI) throw new Error('MONGODB_URI non impostata');
+    if (!connPromise) {
+        connPromise = mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 8000, maxPoolSize: 5 });
+        global._mongoConn = connPromise;
+        connPromise.catch(() => { connPromise = global._mongoConn = null; });
+    }
+    return connPromise;
+}
 
-// L'API autonoma del sito web
 app.get('/api/profilo/:numero', async (req, res) => {
     try {
-        let numero = req.params.numero.replace(/[^0-9]/g, '');
-        let jid = numero + '@s.whatsapp.net';
+        const numero = req.params.numero.replace(/[^0-9]/g, '');
+        if (numero.length < 5 || numero.length > 20) {
+            return res.status(400).json({ success: false, message: 'Numero non valido.' });
+        }
+        const jid = numero + '@s.whatsapp.net';
 
-        // Estrae il documento unico di lowdb da MongoDB
-        const doc = await Database.findOne();
+        await connect();
+        // Stesso documento usato dal bot (il più vecchio), in sola lettura
+        const doc = await Database.findOne().sort({ _id: 1 }).lean();
+        const user = doc?.data?.users?.[jid];
 
-        if (!doc || !doc.data || !doc.data.users || !doc.data.users[jid]) {
+        if (!user || typeof user !== 'object') {
             return res.status(404).json({ success: false, message: 'Utente non trovato. Hai mai interagito con il bot?' });
         }
 
-        let user = doc.data.users[jid];
-        
-        // Formatta i dati da inviare al frontend
-        const datiSicuri = {
-            name: user.name || 'Sconosciuto',
-            health: user.health || 0,
-            vita: user.vita || 0,
-            level: user.level || 0,
-            role: user.role || 'Novellino',
-            limit: user.limit || 0,
-            credito: user.credito || 0,
-            joincount: user.joincount || 0,
-            exp: user.exp || 0
-        };
-
-        res.json({ success: true, data: datiSicuri });
+        res.set('Cache-Control', 'no-store');
+        res.json({
+            success: true,
+            data: {
+                name: user.name || 'Sconosciuto',
+                health: user.health ?? 0,
+                vita: user.vita ?? 0,
+                level: user.level ?? 0,
+                role: user.role || 'Novellino',
+                limit: user.limit ?? 0,
+                credito: user.credito ?? 0,
+                joincount: user.joincount ?? 0,
+                exp: user.exp ?? 0
+            }
+        });
     } catch (error) {
-        console.error(error);
+        console.error('[API profilo]', error.message);
         res.status(500).json({ success: false, message: 'Errore di comunicazione col database.' });
     }
 });
 
-// Avvia il server e recupera l'IP pubblico
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-    console.log(`✅ Server web e API avviati sulla porta ${PORT}`);
-    
-    try {
-        // Recupera l'IP pubblico tramite il servizio ipify
-        const ipResponse = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipResponse.json();
-        console.log(`\n========================================`);
-        console.log(`🌍 Il tuo Indirizzo IP pubblico è: ${ipData.ip}`);
-        console.log(`👉 Aggiungi questo IP alla Whitelist di MongoDB Atlas.`);
-        console.log(`========================================\n`);
-    } catch (error) {
-        console.log('⚠️ Impossibile recuperare l\'indirizzo IP pubblico in automatico.');
-    }
-});
+// In locale (node server.js) avvia il listener; su Vercel basta l'export
+if (!process.env.VERCEL) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`✅ Server avviato sulla porta ${PORT}`));
+}
+
+export default app;
