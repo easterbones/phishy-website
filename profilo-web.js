@@ -66,7 +66,7 @@ function render(u) {
 
     $('profileResult').innerHTML = `
     <div class="clay hero pop">
-      <div class="avatar">${esc(nome.trim().charAt(0).toUpperCase())}</div>
+      <div class="avatar">${esc((Array.from(nome.trim())[0] || '?').toUpperCase())}</div>
       <div>
         <h2 class="name" style="margin:0 0 6px">${esc(nome)}</h2>
         <p class="sub">💼 ${esc(u.lavoro || 'disoccupato')}${u.age > 0 ? ' · 🎂 ' + u.age + ' anni' : ''}</p>
