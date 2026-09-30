@@ -123,6 +123,8 @@ app.get('/api/profilo/:numero', async (req, res) => {
 });
 
 // Pagina e JS serviti dalla cartella "public" (profilo.html, profilo-web.js)
+// Link corto: /profilo/393534409026 apre la pagina e cerca subito quel numero
+app.get('/profilo/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'profilo.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/profilo.html'));
 
