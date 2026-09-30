@@ -1,63 +1,117 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cerca Profilo Utente</title>
-    <!-- Aggiungo Bootstrap per la grafica di base -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f4f6f9;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-top: 50px;
-        }
-        .profile-card {
-            background: #e9ecef;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profilo</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#f3e8ff;--bg2:#ffe4ef;--card:#fbf7ff;--ink:#4a3f6b;--mute:#8b80a8;
+  --sd:rgba(130,100,190,.30);--sl:rgba(255,255,255,.95);
+  --ib:rgba(120,90,180,.13);--il:rgba(255,255,255,.8);
+  --acc:#ff8fb8;--acc2:#ffb36b;--mix:58%;--ok:#7fdcb0;--bad:#ff7d8d;
+}
+:root[data-theme="dark"]{
+  --bg1:#3a0a12;--bg2:#5e101e;--card:#7b1b2a;--ink:#ffe9cc;--mute:#eab9a6;
+  --sd:rgba(20,0,4,.55);--sl:rgba(255,120,120,.10);
+  --ib:rgba(30,0,6,.35);--il:rgba(255,160,140,.16);
+  --acc:#ffb36b;--acc2:#ff8a7a;--mix:32%;
+}
+*{box-sizing:border-box}
+html{min-height:100%}
+body{margin:0;min-height:100vh;font-family:'Nunito',system-ui,sans-serif;font-weight:600;color:var(--ink);
+  background:linear-gradient(145deg,var(--bg1),var(--bg2));background-attachment:fixed;overflow-x:hidden;transition:background .5s,color .5s}
+.blob{position:fixed;border-radius:50%;filter:blur(50px);opacity:.55;z-index:0;animation:float 14s ease-in-out infinite}
+.b1{width:320px;height:320px;background:var(--acc);top:-80px;left:-80px}
+.b2{width:260px;height:260px;background:#9bd0ff;bottom:-60px;right:-40px;animation-delay:-5s}
+.b3{width:200px;height:200px;background:var(--acc2);top:45%;left:60%;animation-delay:-9s;opacity:.35}
+@keyframes float{50%{transform:translate(40px,-50px) scale(1.15)}}
+.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:28px 18px 60px}
+.clay{background:var(--card);border-radius:30px;
+  box-shadow:10px 14px 28px var(--sd),-8px -8px 18px var(--sl),inset -7px -7px 14px var(--ib),inset 7px 7px 14px var(--il)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+h1{margin:0;font-weight:900;font-size:clamp(1.6rem,4vw,2.3rem);letter-spacing:.5px}
+h2{margin:32px 6px 14px;font-weight:900;font-size:1.25rem}
+.btn{border:0;cursor:pointer;font:inherit;font-weight:900;color:#fff;padding:14px 26px;border-radius:999px;
+  background:linear-gradient(145deg,var(--acc),var(--acc2));
+  box-shadow:6px 8px 16px var(--sd),inset -4px -4px 9px rgba(0,0,0,.14),inset 4px 4px 9px rgba(255,255,255,.55);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.btn:hover{transform:translateY(-3px) scale(1.06)}.btn:active{transform:scale(.92)}
+.round{width:54px;height:54px;padding:0;font-size:1.3rem;background:var(--card);color:var(--ink);
+  box-shadow:6px 8px 16px var(--sd),-5px -5px 12px var(--sl),inset -4px -4px 9px var(--ib),inset 4px 4px 9px var(--il)}
+.search{display:flex;gap:12px;padding:12px;border-radius:999px}
+.search input{flex:1;min-width:0;border:0;outline:0;font:inherit;font-weight:800;color:var(--ink);padding:0 22px;border-radius:999px;
+  background:transparent;box-shadow:inset 5px 5px 12px var(--ib),inset -5px -5px 12px var(--il)}
+.search input::placeholder{color:var(--mute)}
+.err{margin-top:20px;padding:18px 24px;text-align:center;color:var(--bad);font-weight:900;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+.loader{display:flex;justify-content:center;gap:12px;margin:40px}
+.loader i{width:22px;height:22px;border-radius:50%;background:var(--acc);box-shadow:inset -3px -3px 6px rgba(0,0,0,.18),inset 3px 3px 6px rgba(255,255,255,.6);animation:bounce .8s infinite ease-in-out}
+.loader i:nth-child(2){animation-delay:.12s;background:var(--acc2)}.loader i:nth-child(3){animation-delay:.24s;background:#9bd0ff}
+@keyframes bounce{50%{transform:translateY(-22px)}}
+@keyframes pop{0%{opacity:0;transform:translateY(26px) scale(.85)}70%{transform:translateY(-4px) scale(1.03)}100%{opacity:1;transform:none}}
+.pop{animation:pop .7s cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:calc(var(--i,0)*55ms)}
+[hidden]{display:none!important}
+.hero{display:grid;grid-template-columns:auto 1fr auto;gap:26px;align-items:center;padding:30px;margin-top:26px}
+.avatar{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;font-size:3rem;font-weight:900;color:#fff;
+  background:linear-gradient(145deg,var(--acc),var(--acc2));
+  box-shadow:8px 10px 20px var(--sd),inset -8px -8px 16px rgba(0,0,0,.15),inset 8px 8px 16px rgba(255,255,255,.55);animation:bob 4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px) rotate(3deg)}}
+.name{font-size:clamp(1.5rem,4vw,2.1rem);font-weight:900;margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 12px}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{padding:7px 14px;border-radius:999px;font-size:.85rem;font-weight:900;background:var(--card);
+  box-shadow:3px 4px 8px var(--sd),inset -3px -3px 6px var(--ib),inset 3px 3px 6px var(--il)}
+.badge.bad{color:var(--bad)}.badge.good{color:#36b98a}
+.notice{margin-top:18px;padding:16px 22px;font-weight:800;color:var(--acc2)}
+.gauge{width:190px;text-align:center}.gauge svg{width:100%;overflow:visible}
+.gauge .lbl{margin-top:-6px;font-weight:900;color:var(--mute);font-size:.85rem}
+.gauge .val{font-size:1.9rem;font-weight:900;margin-top:-46px;position:relative}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px}
+.tile{padding:20px 14px;text-align:center;border-radius:28px;cursor:default;
+  background:color-mix(in srgb,var(--c) var(--mix),var(--card));
+  box-shadow:9px 12px 22px var(--sd),-6px -6px 14px var(--sl),inset -6px -6px 12px rgba(0,0,0,.09),inset 6px 6px 12px rgba(255,255,255,.5);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.tile:hover{transform:translateY(-8px) scale(1.05) rotate(-1deg)}.tile:active{transform:scale(.96)}
+.ico{width:54px;height:54px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;font-size:1.5rem;background:var(--card);
+  box-shadow:4px 5px 10px var(--sd),inset -4px -4px 8px var(--ib),inset 4px 4px 8px var(--il)}
+.tile b{display:block;font-size:1.55rem;font-weight:900;line-height:1.1;word-break:break-word}
+.tile span{font-size:.85rem;color:var(--ink);opacity:.75;font-weight:800}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.panel{padding:24px}
+.sw{display:flex;justify-content:space-between;align-items:center;padding:12px 4px}
+.sw+.sw{border-top:2px dashed var(--ib)}
+.tg{width:62px;height:34px;border-radius:999px;position:relative;background:var(--ib);box-shadow:inset 4px 4px 9px var(--ib),inset -3px -3px 7px var(--il);transition:background .4s}
+.tg::after{content:"";position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:var(--card);
+  box-shadow:3px 3px 7px var(--sd),inset -3px -3px 6px var(--ib),inset 3px 3px 6px var(--il);transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.tg.on{background:var(--ok)}.tg.on.red{background:var(--bad)}.tg.on::after{transform:translateX(28px)}
+.row{display:flex;justify-content:space-between;gap:16px;padding:12px 4px;align-items:baseline}
+.row+.row{border-top:2px dashed var(--ib)}.row span{color:var(--mute)}.row b{text-align:right;font-weight:900;word-break:break-word}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.g{padding:20px}.g h4{margin:0 0 12px;font-weight:900}
+.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{padding:5px 12px;border-radius:999px;font-size:.8rem;font-weight:800;background:var(--card);
+  box-shadow:2px 3px 6px var(--sd),inset -2px -2px 5px var(--ib),inset 2px 2px 5px var(--il)}
+@media(max-width:720px){.hero{grid-template-columns:1fr;text-align:center;justify-items:center}.badges{justify-content:center}.two{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<main class="wrap">
+  <header class="top">
+    <h1>Profilo</h1>
+    <button id="themeBtn" class="btn round" type="button" aria-label="Cambia tema">🌙</button>
+  </header>
 
-<div class="container">
-    <h2 class="text-center mb-4">Cerca Profilo Bot</h2>
-    
-    <div class="input-group mb-3">
-        <input type="text" id="numeroInput" class="form-control" placeholder="Inserisci il numero (es. 393401234567)">
-        <button id="btnCerca" class="btn btn-secondary">Cerca</button>
-    </div>
+  <form id="searchForm" class="clay search">
+    <input type="text" id="numeroInput" inputmode="numeric" autocomplete="off" placeholder="Inserisci il numero (es. 39xxxxxxxxxx)">
+    <button id="btnCerca" class="btn" type="submit">Cerca</button>
+  </form>
 
-    <!-- Messaggio di Errore -->
-    <div id="errorMsg" class="alert alert-danger" style="display: none; text-align: center;"></div>
-
-    <!-- Risultati Profilo -->
-    <div id="profileResult" class="profile-card" style="display: none;">
-        <h3 id="pName" class="text-center mb-3">👤 Utente</h3>
-        <ul class="list-group list-group-flush">
-            <li class="list-group-item bg-transparent border-dark"><strong>Livello:</strong> <span id="pLevel"></span></li>
-            <li class="list-group-item bg-transparent border-dark"><strong>Ruolo:</strong> <span id="pRole"></span></li>
-            <li class="list-group-item bg-transparent border-dark"><strong>Salute:</strong> <span id="pHealth"></span></li>
-            <li class="list-group-item bg-transparent border-dark"><strong>Vita:</strong> <span id="pVita"></span></li>
-            <li class="list-group-item bg-transparent border-dark"><strong>Limite:</strong> <span id="pLimit"></span></li>
-            <li class="list-group-item bg-transparent border-dark"><strong>Credito:</strong> <span id="pCredito"></span></li>
-            <li class="list-group-item bg-transparent border-dark"><strong>Join:</strong> <span id="pJoin"></span></li>
-            <li class="list-group-item bg-transparent border-dark"><strong>Esperienza:</strong> <span id="pExp"></span></li>
-        </ul>
-    </div>
-</div>
-
-<!-- Collegamento al file JavaScript -->
+  <div id="errorMsg" class="clay err" hidden></div>
+  <div id="loader" class="loader" hidden><i></i><i></i><i></i></div>
+  <section id="profileResult" hidden></section>
+</main>
 <script src="/profilo-web.js"></script>
-
 </body>
 </html>
