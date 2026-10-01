@@ -1,56 +1,181 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phishy Bot 🐟</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Phishetta · il bot di Viridi Celesti</title>
+<meta name="theme-color" content="#3d0b24">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=IM+Fell+English:ital@0;1&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wine:#3d0b24; --wine2:#5a1236; --gold:#d9ae55; --pink:#ff8fc8; --sky:#a6dcff;
+  --paper:#fbefe6; --ink:#3a1428; --chrome:linear-gradient(135deg,#fff,#c9c4d6 30%,#fff 50%,#9d98b0 75%,#f4f0ff);
+  --disp:'UnifrakturCook',serif; --body:'IM Fell English',Georgia,serif; --hand:'Caveat',cursive;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--body);font-size:1.12rem;line-height:1.6;color:var(--paper);
+  background-color:var(--wine);
+  background-image:
+    radial-gradient(circle at 50% 50%,rgba(217,174,85,.22) 0 2px,transparent 3px),
+    linear-gradient(45deg,transparent 48%,rgba(217,174,85,.09) 49% 51%,transparent 52%),
+    linear-gradient(-45deg,transparent 48%,rgba(217,174,85,.09) 49% 51%,transparent 52%);
+  background-size:44px 44px;
+  padding-bottom:calc(92px + env(safe-area-inset-bottom));
+  max-width:520px;margin:0 auto;overflow-x:hidden;
+}
+svg.i{width:1em;height:1em;fill:currentColor;vertical-align:-.12em}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+
+/* top */
+.top{display:flex;justify-content:center;align-items:center;gap:.6rem;padding:calc(14px + env(safe-area-inset-top)) 16px 4px;font-family:var(--disp);font-size:1.5rem;color:var(--gold)}
+.top svg{color:var(--pink)}
+
+/* hero */
+.hero{text-align:center;padding:10px 22px 34px;position:relative}
+.cameo{width:min(78vw,300px);aspect-ratio:4/5;margin:14px auto 0;padding:7px;border-radius:50%;background:var(--chrome);box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 0 3px var(--pink);position:relative}
+.cameo div{width:100%;height:100%;border-radius:50%;border:6px double var(--gold);overflow:hidden;background:var(--wine2)}
+.cameo img{width:100%;height:100%;object-fit:cover;display:block}
+.cameo .s{position:absolute;color:var(--sky);filter:drop-shadow(0 0 6px #fff)}
+.s1{width:34px;height:34px;top:2%;right:-6%;animation:tw 2.4s ease-in-out infinite}
+.s2{width:22px;height:22px;bottom:12%;left:-8%;color:var(--pink)!important;animation:tw 2.4s .8s ease-in-out infinite}
+@keyframes tw{50%{transform:scale(.55) rotate(25deg);opacity:.6}}
+.ribbon{display:inline-block;margin-top:-22px;position:relative;z-index:2;background:var(--pink);color:var(--wine);font-family:var(--hand);font-size:1.35rem;padding:2px 22px;transform:rotate(-3deg);box-shadow:3px 3px 0 var(--wine),0 0 0 2px var(--gold);clip-path:polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%)}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(3.2rem,16vw,4.6rem);line-height:1;margin:14px 0 8px;color:var(--paper);text-shadow:2px 2px 0 var(--pink),4px 4px 0 var(--wine2)}
+.lead{max-width:30ch;margin:0 auto 24px;font-style:italic}
+.cta{display:flex;flex-direction:column;gap:12px}
+.btn{display:flex;align-items:center;justify-content:center;gap:.6rem;min-height:56px;padding:0 24px;border-radius:999px;text-decoration:none;font-family:var(--disp);font-size:1.45rem;transition:transform .15s}
+.btn:active{transform:scale(.96)}
+.btn.main{background:linear-gradient(180deg,#ffc2e3,var(--pink) 55%,#f26cb2);color:var(--wine);border:2px solid #fff;box-shadow:0 5px 0 #b13c83,0 10px 20px rgba(0,0,0,.4)}
+.btn.alt{background:transparent;color:var(--gold);border:2px dashed var(--gold);min-height:50px;font-size:1.25rem}
+
+/* divider */
+.orn{display:flex;align-items:center;gap:10px;color:var(--gold);margin:0 22px}
+.orn:before,.orn:after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--gold) 0 6px,transparent 6px 10px)}
+
+/* scrapbook */
+.book{padding:30px 16px 10px}
+.sec-t{font-family:var(--disp);font-size:2rem;text-align:center;color:var(--gold);margin-bottom:4px}
+.sec-s{font-family:var(--hand);font-size:1.3rem;text-align:center;color:var(--sky);margin-bottom:22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:26px 14px}
+.pol{background:var(--paper);color:var(--ink);padding:8px 8px 4px;box-shadow:0 8px 16px rgba(0,0,0,.45);position:relative;transform:rotate(var(--r,-2deg));transition:transform .3s;cursor:pointer;border:0;font:inherit;text-align:center}
+.pol img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--wine2)}
+.pol span{display:block;font-family:var(--hand);font-size:1.25rem;line-height:1.7}
+.pol:before{content:"";position:absolute;top:-12px;left:50%;width:62px;height:22px;transform:translateX(-50%) rotate(var(--t,4deg));background:repeating-linear-gradient(45deg,rgba(255,143,200,.85) 0 6px,rgba(255,255,255,.8) 6px 12px);opacity:.92}
+.pol.big{grid-column:1/-1;--r:1.5deg;margin:0 8px}
+.pol.big img{aspect-ratio:4/3}
+.pol:nth-child(2){--r:-3deg;--t:-6deg}.pol:nth-child(3){--r:3deg;margin-top:14px}
+.pol:nth-child(4){--r:2deg;--t:-3deg}.pol:nth-child(5){--r:-2.5deg;margin-top:-6px}
+.pol.up{transform:rotate(0) scale(1.06);z-index:3}
+
+/* note */
+.note{margin:38px 18px 0;background:var(--paper);color:var(--ink);padding:26px 22px 22px;position:relative;box-shadow:0 8px 18px rgba(0,0,0,.45);transform:rotate(-1deg);
+  background-image:repeating-linear-gradient(transparent 0 31px,rgba(166,220,255,.55) 31px 32px);
+  clip-path:polygon(0 3%,6% 0,14% 2%,25% 0,38% 2%,52% 0,66% 2%,80% 0,92% 2%,100% 0,100% 98%,90% 100%,76% 98%,60% 100%,44% 98%,28% 100%,12% 98%,0 100%)}
+.note h2{font-family:var(--disp);font-size:1.9rem;line-height:1.1;margin-bottom:8px;color:var(--wine2)}
+.note p{line-height:32px;max-width:36ch}
+.note .hand{font-family:var(--hand);font-size:1.4rem;color:#c43c8b;display:block;margin-top:4px}
+
+/* quick links */
+.links{display:grid;gap:14px;padding:34px 18px 0}
+.lk{display:flex;align-items:center;gap:16px;text-decoration:none;min-height:84px;padding:12px 16px;border-radius:18px 4px 18px 4px;background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,143,200,.2));border:2px solid var(--gold);outline:2px solid rgba(217,174,85,.4);outline-offset:3px}
+.lk svg.i{flex:none;width:42px;height:42px;color:var(--pink);filter:drop-shadow(0 0 5px rgba(255,255,255,.5))}
+.lk b{display:block;font-family:var(--disp);font-size:1.5rem;font-weight:700;line-height:1.1}
+.lk small{font-size:1rem;opacity:.85}
+
+footer{text-align:center;padding:40px 24px 10px;font-size:.95rem;opacity:.85}
+footer .hand{font-family:var(--hand);font-size:1.4rem;color:var(--pink);display:block}
+
+/* bottom nav */
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));width:min(calc(100% - 24px),496px);display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border-radius:26px;background:var(--chrome);box-shadow:0 8px 24px rgba(0,0,0,.6),0 0 0 2px var(--gold);z-index:9}
+.nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border-radius:20px;text-decoration:none;color:var(--wine);font-family:var(--hand);font-size:1.05rem;line-height:1}
+.nav a svg{width:26px;height:26px}
+.nav a[aria-current]{background:var(--pink);box-shadow:inset 0 0 0 2px #fff}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
 
-  <header>
-    <nav class="navbar">
-      <div class="logo">
-        <img src="assets/img/avatar-logo.png" alt="Phishy Avatar" class="logo-img">
-        Phishy <span>Bot</span>
-      </div>
-      <button class="mobile-menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
-      <ul class="nav-links" id="navLinks">
-        <li><a href="index.html" class="active">Home</a></li>
-        <li><a href="regole.html">Regole & Gruppi</a></li>
-        <li><a href="comandi.html">Comandi</a></li>
-        <li><a href="reddit.html">Reddit</a></li>
-        <li><a href="meme.html">Video Meme</a></li>
-      </ul>
-    </nav>
-  </header>
+<!-- Emoji SVG personalizzate -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="spark" viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12C7 11 11 7 12 0z"/></symbol>
+  <symbol id="fish" viewBox="0 0 24 24"><path d="M1 12c3-5 8-7 13-5l3 2 5-4v14l-5-4-3 2c-5 2-10 0-13-5zm5-1.5a1.2 1.2 0 100 .01z" fill-rule="evenodd"/></symbol>
+  <symbol id="home" viewBox="0 0 24 24"><path d="M12 2L1 11h3v10h6v-6h4v6h6V11h3z"/></symbol>
+  <symbol id="scroll" viewBox="0 0 24 24"><path d="M6 2h13a2 2 0 012 2v2h-3v11a4 4 0 01-4 4H5a3 3 0 003-3v-1H3v-2h3zm10 4H8v11h6a2 2 0 002-2z"/></symbol>
+  <symbol id="cmd" viewBox="0 0 24 24"><path d="M3 4h18v14H8l-5 4zm4 4v2h10V8zm0 4v2h6v-2z"/></symbol>
+  <symbol id="film" viewBox="0 0 24 24"><path d="M2 4h20v16H2zm2 2v2h2V6zm14 0v2h2V6zM4 16v2h2v-2zm14 0v2h2v-2zM9 8v8l7-4z" fill-rule="evenodd"/></symbol>
+  <symbol id="key" viewBox="0 0 24 24"><path d="M8 2a6 6 0 015.7 8l8.3 8-2 4h-3v-3h-3v-3l-2-2A6 6 0 118 2zm-1 3a2 2 0 100 4 2 2 0 000-4z" fill-rule="evenodd"/></symbol>
+  <symbol id="people" viewBox="0 0 24 24"><path d="M9 4a4 4 0 110 8 4 4 0 010-8zm8 1a3 3 0 110 6 3 3 0 010-6zM1 20c0-4 3-6 8-6s8 2 8 6zm17-5c3 0 5 1 5 5h-4c0-2-.5-3.5-1-5z"/></symbol>
+  <symbol id="cherry" viewBox="0 0 24 24"><path d="M13 2c4 0 7 3 8 6-3-2-6-2-7 0l-1 9a4.500 4.500 0 11-2-3.700L12 4C8 5 6 8 5 11a5 5 0 105 7l1-1a4 4 0 103-5z"/></symbol>
+</svg>
 
-  <main>
-    <section class="hero">
-      <img src="assets/img/avatar-logo.png" alt="Phishy Bot" class="hero-avatar">
-      <div>
-        <h1>Benvenuto su <span class="green">Phishy</span> <span class="pink">Bot</span> 🐟</h1>
-        <p>Il bot definitivo per moderazione, classifiche e divertimento nei tuoi gruppi WhatsApp!</p>
-        
-        <div class="hero-buttons">
-  
-         <a href="profilo.html" class="btn btn-primary">
-        <i class="fa-solid fa-user-gear"></i> Cerca Profilo
-        </a>
-          
-          <a href="regole.html" class="btn btn-secondary">
-            <i class="fa-solid fa-users"></i> Vedi i Gruppi
-          </a>
-        </div>
-      </div>
-    </section>
-  </main>
+<div class="top"><svg class="i"><use href="#fish"/></svg>Viridi Celesti<svg class="i"><use href="#cherry"/></svg></div>
 
-  <footer>
-    <p>&copy; 2026 Phishy Bot 🐟 - Tutti i diritti riservati.</p>
-  </footer>
+<main>
+<section class="hero">
+  <div class="cameo">
+    <div><img src="public/img/phishy-vestito_rosso_fisheye.jpeg" alt="Phishetta con il vestito rosso, foto fisheye"></div>
+    <svg class="i s s1"><use href="#spark"/></svg>
+    <svg class="i s s2"><use href="#spark"/></svg>
+  </div>
+  <span class="ribbon">il bot della community</span>
+  <h1>Phishetta</h1>
+  <p class="lead">Giochi, comandi e un pizzico di caos: il bot ufficiale di Viridi Celesti.</p>
+  <div class="cta">
+    <a class="btn main" href="profilo.html"><svg class="i"><use href="#key"/></svg>Cerca profilo</a>
+    <a class="btn alt" href="regole.html"><svg class="i"><use href="#people"/></svg>Vedi i gruppi</a>
+  </div>
+</section>
 
-  <script src="script.js"></script>
+<div class="orn"><svg class="i"><use href="#spark"/></svg><svg class="i"><use href="#fish"/></svg><svg class="i"><use href="#spark"/></svg></div>
+
+<section class="book">
+  <h2 class="sec-t">L'album di Phishi</h2>
+  <p class="sec-s">tocca le foto, sono appiccicate male</p>
+  <div class="grid">
+    <button class="pol big"><img src="public/img/phishy_creepy_cherry.jpeg" alt="Phishy con le ciliegie" loading="lazy"><span>creepy cherry</span></button>
+    <button class="pol"><img src="public/img/phishy_farfalle.jpeg" alt="Phishy con le farfalle" loading="lazy"><span>farfalle</span></button>
+    <button class="pol"><img src="public/img/phishy_fuma_ps2.jpeg" alt="Phishy fuma davanti alla PS2" loading="lazy"><span>ps2 e fumo</span></button>
+    <button class="pol"><img src="public/img/phishy_fumo.jpeg" alt="Phishy nel fumo" loading="lazy"><span>nebbia</span></button>
+    <button class="pol"><img src="public/img/phishy_fumo_rosa.jpeg" alt="Phishy nel fumo rosa" loading="lazy"><span>fumo rosa</span></button>
+  </div>
+</section>
+
+<section class="note">
+  <h2>Chi è Phishetta?</h2>
+  <p>Un bot per WhatsApp nato da un fork di varebot, costruito su @realvare/baileys e poi riempito di personalità, funzioni e giochi tutti suoi.</p>
+  <span class="hand">scrivile nel gruppo e lei risponde ~</span>
+</section>
+
+<nav class="links" aria-label="Sezioni del sito">
+  <a class="lk" href="comandi.html"><svg class="i"><use href="#cmd"/></svg><span><b>Comandi</b><small>Tutto quello che sa fare</small></span></a>
+  <a class="lk" href="regole.html"><svg class="i"><use href="#scroll"/></svg><span><b>Regole &amp; gruppi</b><small>Come si sta insieme</small></span></a>
+  <a class="lk" href="meme.html"><svg class="i"><use href="#film"/></svg><span><b>Video meme</b><small>La collezione della community</small></span></a>
+</nav>
+</main>
+
+<footer>
+  <span class="hand">con amore, Phishetta</span>
+  &copy; 2026 Phishetta · Viridi Celesti
+</footer>
+
+<nav class="nav" aria-label="Navigazione principale">
+  <a href="index.html" aria-current="page"><svg class="i"><use href="#home"/></svg>Home</a>
+  <a href="regole.html"><svg class="i"><use href="#scroll"/></svg>Regole</a>
+  <a href="comandi.html"><svg class="i"><use href="#cmd"/></svg>Comandi</a>
+  <a href="meme.html"><svg class="i"><use href="#film"/></svg>Meme</a>
+</nav>
+
+<script>
+document.querySelectorAll('.pol').forEach(p=>p.addEventListener('click',()=>{
+  const on=p.classList.contains('up');
+  document.querySelectorAll('.pol.up').forEach(x=>x.classList.remove('up'));
+  if(!on)p.classList.add('up');
+}));
+</script>
 </body>
 </html>
