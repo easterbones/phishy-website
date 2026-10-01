@@ -1,32 +1,43 @@
-// URL del server del bot (quello che esegue main.js e ha la route /api/profilo).
-// Lascia '' solo se sito e bot sono sullo stesso dominio.
+// URL del server del bot (quello con la route /api/profilo). '' se sito e API sono sullo stesso dominio.
 const API_BASE = 'https://phishy-websites.onrender.com';
+
+// Immagini di Phishy: tutte 1536x1024 (3:2). Cartella: public/img/
+const A = {
+    portrait: '/img/phishy-vestito_rosso_fisheye.jpeg',
+    stato: '/img/phishy_farfalle.jpeg',
+    info: '/img/phishy_fuma_ps2.jpeg',
+    prof: '/img/20250902_0309_Professoressa_Pixel_Art_remix_01k43zdghafeya83p5srawgy8q.png',
+    gruppi: '/img/phishy_creepy_cherry.jpeg'
+};
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('it-IT');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const dataIT = (ms) => (ms > 0 ? new Date(ms).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }) : '—');
+const ic = (n) => `<svg class="ic"><use href="#i-${n}"/></svg>`;
+const img = (src, cls = '', extra = '') => `<img ${cls ? `class="${cls}"` : ''} src="${src}" width="1536" height="1024" alt="" ${extra} onerror="this.remove()">`;
 
-// [campo, etichetta, icona, colore]
+const roman = (n) => {
+    n = Math.floor(n);
+    if (n <= 0 || n >= 4000) return String(Math.max(0, n));
+    let r = '';
+    for (const [v, s] of [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']])
+        while (n >= v) { r += s; n -= v; }
+    return r;
+};
+
+// [campo, etichetta, icona]
 const TILES = [
-    ['level', 'Livello', '⭐', '#ffd86b'],
-    ['exp', 'Esperienza', '✨', '#b9a4ff'],
-    ['limit', 'Caramelle', '🍬', '#ff9ec4'],
-    ['credito', 'Credito', '💳', '#8fe3c8'],
-    ['euro', 'Euro', '💶', '#9bd0ff'],
-    ['bank', 'Banca', '🏦', '#ffb98a'],
-    ['vita', 'Vita', '💖', '#ff9a9a'],
-    ['messages', 'Messaggi', '💬', '#a5e8ff'],
-    ['stickerCount', 'Sticker', '🖼️', '#d8b4ff'],
-    ['joincount', 'Join', '🚪', '#c8e89a'],
-    ['spam', 'Spam', '📢', '#ffd0a0'],
-    ['warn', 'Warn', '⚠️', '#ffe28a'],
-    ['callWarn', 'Warn chiamate', '📞', '#ffb3b3'],
-    ['tprem', 'Tprem', '👑', '#f5c6ff']
+    ['level', 'Livello', 'star'], ['exp', 'Esperienza', 'spark'], ['limit', 'Caramelle', 'candy'],
+    ['credito', 'Credito', 'card'], ['euro', 'Euro', 'euro'], ['bank', 'Banca', 'bank'],
+    ['vita', 'Vita', 'heart'], ['messages', 'Messaggi', 'chat'], ['stickerCount', 'Sticker', 'sticker'],
+    ['joincount', 'Join', 'door'], ['spam', 'Spam', 'mega'], ['warn', 'Warn', 'warn'],
+    ['callWarn', 'Warn chiamate', 'phone'], ['tprem', 'Tprem', 'crown']
 ];
 
-function countUp(el, target, fmt = (v) => nf.format(Math.round(v))) {
+function countUp(el, target) {
+    const fmt = (v) => nf.format(Math.round(v));
     if (reduced || !isFinite(target)) { el.textContent = fmt(target); return; }
     const t0 = performance.now(), dur = 1100;
     const step = (t) => {
@@ -38,72 +49,73 @@ function countUp(el, target, fmt = (v) => nf.format(Math.round(v))) {
 }
 
 function render(u) {
-    let i = 0;
     const nome = u.name === 'Sconosciuto' ? 'Easter Bone' : (u.name && u.name !== '?' ? u.name : 'Utente');
     const health = Math.max(0, Math.min(100, Number(u.health) || 0));
+    const bd = (cls, icon, t) => `<span class="bd ${cls}">${ic(icon)}${t}</span>`;
 
     const badges = [
-        u.registered ? '<span class="badge good">✅ Registrato</span>' : '<span class="badge">📝 Non registrato</span>',
-        u.role ? `<span class="badge">🎖️ ${esc(u.role)}</span>` : '',
-        u.premium ? '<span class="badge good">👑 Premium</span>' : '',
-        u.sposato ? `<span class="badge">💍 Sposato${u.partner ? ' con ' + esc(u.partner) : ''}</span>` : '',
-        u.muto ? '<span class="badge bad">🔇 Muto</span>' : '',
-        u.banned ? '<span class="badge bad">🚫 Bannato</span>' : ''
+        u.registered ? bd('ok', 'check', 'Registrato') : bd('', 'warn', 'Non registrato'),
+        u.role ? bd('gold', 'ribbon', esc(u.role)) : '',
+        u.premium ? bd('gold', 'crown', 'Premium') : '',
+        u.sposato ? bd('', 'ring', 'Sposato' + (u.partner ? ' con ' + esc(u.partner) : '')) : '',
+        u.muto ? bd('bad', 'mute', 'Muto') : '',
+        u.banned ? bd('bad', 'ban', 'Bannato') : ''
     ].join('');
 
-    const tiles = TILES.map(([k, label, ico, c]) =>
-        `<div class="tile pop" style="--c:${c};--i:${++i + 4}"><div class="ico">${ico}</div><b data-n="${Number(u[k]) || 0}">0</b><span>${label}</span></div>`
+    const tiles = TILES.map(([k, label, icon], n) =>
+        `<div class="tile t${(n % 6) + 1} pop" style="--i:${n}"><div class="ico">${ic(icon)}</div><b data-n="${Number(u[k]) || 0}">0</b><span>${label}</span></div>`
     ).join('');
 
-    const sw = (label, on, red) => `<div class="sw"><span>${label}</span><div class="tg ${on ? 'on' : ''} ${red ? 'red' : ''}"></div></div>`;
-    const row = (l, v) => `<div class="row"><span>${l}</span><b>${esc(v)}</b></div>`;
+    const sw = (label, icon, on, red) => `<div class="sw"><span>${ic(icon)}${label}</span><div class="tg ${on ? 'on' : ''} ${red ? 'red' : ''}"></div></div>`;
+    const row = (icon, l, v) => `<div class="row"><span>${ic(icon)}${l}</span><b>${esc(v)}</b></div>`;
 
     const gruppi = (u.groups || []).map((g, n) => {
         const chips = Object.entries(g.stats || {}).map(([k, v]) =>
             `<span class="chip">${esc(k)}: ${typeof v === 'number' ? nf.format(v) : typeof v === 'boolean' ? (v ? 'sì' : 'no') : esc(v)}</span>`).join('');
-        return `<div class="clay g pop" style="--i:${n}"><h4>👥 ${esc(g.name)}</h4><div class="chips">${chips || '<span class="chip">nessuna statistica</span>'}</div></div>`;
+        return `<div class="card g pop" style="--i:${n}"><h4>${ic('group')}${esc(g.name)}</h4><div class="chips">${chips || '<span class="chip">nessuna statistica</span>'}</div></div>`;
     }).join('');
 
+    const rib = (icon, t, c) => `<div class="rib"><span>${ic(icon)}${t}</span><span class="cnt">${c}</span></div>`;
+
     $('profileResult').innerHTML = `
-    <div class="clay hero pop">
-      <div class="avatar">${esc((Array.from(nome.trim())[0] || '?').toUpperCase())}</div>
+    <div class="card hero pop">
+      <div class="por">${img(A.portrait)}<div class="seal"><b>${roman(u.level)}</b><small>LIVELLO</small></div></div>
       <div>
-        <h2 class="name" style="margin:0 0 6px">${esc(nome)}</h2>
-        <p class="sub">💼 ${esc(u.lavoro || 'disoccupato')}${u.age > 0 ? ' · 🎂 ' + u.age + ' anni' : ''}</p>
+        <h2 class="name">${esc(nome)}</h2>
+        <p class="meta">${esc(u.lavoro || 'disoccupato')}${u.age > 0 ? ', ' + u.age + ' anni' : ''}</p>
         <div class="badges">${badges}</div>
-      </div>
-      <div class="gauge">
-        <svg viewBox="0 0 200 110"><path d="M20 100A80 80 0 0 1 180 100" fill="none" stroke="var(--ib)" stroke-width="22" stroke-linecap="round"/>
-        <path id="gaugeArc" d="M20 100A80 80 0 0 1 180 100" fill="none" stroke="url(#gg)" stroke-width="22" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3" style="transition:stroke-dashoffset 1.4s cubic-bezier(.34,1.2,.64,1)"/>
-        <defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="var(--acc2)"/><stop offset="1" stop-color="var(--acc)"/></linearGradient></defs></svg>
-        <div class="val"><span data-n="${health}">0</span><small>%</small></div>
-        <div class="lbl">❤️ SALUTE</div>
+        <div class="vital">
+          <div><span>${ic('heart')} Salute</span></div>
+          <div class="bar"><div class="fill" id="fill"></div><span class="pct" id="pct">0%</span></div>
+        </div>
       </div>
     </div>
-    ${u.registered ? '' : '<div class="clay notice pop" style="--i:2">📝 Profilo non registrato: molti valori restano quelli di default finché l\'utente non usa il comando <b>.reg</b></div>'}
+    ${u.registered ? '' : `<div class="note pop" style="--i:2">${img(A.prof)}<span>Il registro non ti conosce ancora: molti valori restano quelli di default finché non usi il comando <b>.reg</b></span></div>`}
 
-    <h2>📊 Statistiche</h2>
+    ${rib('star', 'Statistiche', roman(TILES.length) + ' voci')}
     <div class="grid">${tiles}</div>
 
+    ${rib('ribbon', 'Dossier', 'II schede')}
     <div class="two">
-      <div><h2>🎛️ Stato</h2><div class="clay panel pop" style="--i:3">
-        ${sw('Registrato', u.registered)}${sw('Premium', u.premium)}${sw('Sposato', u.sposato)}${sw('Muto', u.muto, true)}${sw('Bannato', u.banned, true)}
+      <div class="card panel pop">${img(A.stato, 'band')}<div class="in">
+        ${sw('Registrato', 'check', u.registered)}${sw('Premium', 'crown', u.premium)}${sw('Sposato', 'ring', u.sposato)}${sw('Muto', 'mute', u.muto, true)}${sw('Bannato', 'ban', u.banned, true)}
       </div></div>
-      <div><h2>🪪 Informazioni</h2><div class="clay panel pop" style="--i:4">
-        ${row('Età', u.age > 0 ? u.age + ' anni' : '—')}${row('Lavoro', u.lavoro || 'disoccupato')}${row('Partner', u.partner || '—')}
-        ${row('Registrato il', dataIT(u.regTime))}${row('Primo accesso', dataIT(u.firstTime))}${row('Premium fino al', dataIT(u.premiumDate))}
-        ${row('Descrizione', u.descrizione || 'nessuna descrizione')}
+      <div class="card panel pop" style="--i:2">${img(A.info, 'band')}<div class="in">
+        ${row('cal', 'Età', u.age > 0 ? u.age + ' anni' : '—')}${row('job', 'Lavoro', u.lavoro || 'disoccupato')}${row('ring', 'Partner', u.partner || '—')}
+        ${row('cal', 'Registrato il', dataIT(u.regTime))}${row('cal', 'Primo accesso', dataIT(u.firstTime))}${row('crown', 'Premium fino al', dataIT(u.premiumDate))}
+        ${row('chat', 'Descrizione', u.descrizione || 'nessuna descrizione')}
       </div></div>
     </div>
 
-    <h2>👥 Gruppi (${(u.groups || []).length})</h2>
-    ${gruppi ? `<div class="groups">${gruppi}</div>` : '<div class="clay panel">Nessun dato di gruppo per questo utente.</div>'}`;
+    ${rib('group', 'Gruppi', roman((u.groups || []).length) + (u.groups && u.groups.length ? '' : ' voci'))}
+    ${img(A.gruppi, 'gband')}
+    ${gruppi ? `<div class="groups">${gruppi}</div>` : '<div class="card empty">Nessun dato di gruppo per questo utente.</div>'}`;
 
-    // animazioni numeri e gauge
     $('profileResult').querySelectorAll('[data-n]').forEach((el) => countUp(el, Number(el.dataset.n)));
     requestAnimationFrame(() => requestAnimationFrame(() => {
-        const arc = $('gaugeArc');
-        if (arc) arc.style.strokeDashoffset = 251.3 * (1 - health / 100);
+        $('fill').style.width = health + '%';
+        countUp($('pct'), health);
+        setTimeout(() => { $('pct').textContent = health + '%'; }, 1200);
     }));
 }
 
@@ -120,26 +132,25 @@ function numeroDaUrl() {
 async function cercaUtente() {
     const input = $('numeroInput').value.replace(/[^0-9]/g, '');
     const err = $('errorMsg'), res = $('profileResult'), loader = $('loader');
-    const mostraErrore = (t) => { err.textContent = t; err.hidden = false; };
+    const mostraErrore = (t) => { err.innerHTML = ic('ban') + '<span>' + esc(t) + '</span>'; err.hidden = false; };
     err.hidden = true; res.hidden = true;
 
-    if (!input) return mostraErrore('⚠️ Inserisci un numero prima di cercare.');
+    if (!input) return mostraErrore('Inserisci un numero prima di cercare.');
 
     loader.hidden = false;
     try {
         const r = await fetch(`${API_BASE}/api/profilo/${input}`);
         if (!(r.headers.get('content-type') || '').includes('application/json')) {
-            return mostraErrore(`❌ Il server API non risponde come previsto (HTTP ${r.status}). Controlla API_BASE in profilo-web.js.`);
+            return mostraErrore(`Il server API non risponde come previsto (HTTP ${r.status}). Controlla API_BASE in profilo-web.js.`);
         }
         const json = await r.json();
         if (json.success) {
             render(json.data); res.hidden = false;
             if (location.pathname.endsWith('.html')) history.replaceState(null, '', '?' + input);
-        }
-        else mostraErrore(json.message || 'Utente non trovato.');
+        } else mostraErrore(json.message || 'Utente non trovato.');
     } catch (e) {
         console.error('Errore fetch API:', e);
-        mostraErrore('❌ Impossibile comunicare con il database.');
+        mostraErrore('Impossibile comunicare con il database.');
     } finally {
         loader.hidden = true;
     }
@@ -147,18 +158,6 @@ async function cercaUtente() {
 
 document.addEventListener('DOMContentLoaded', () => {
     $('searchForm').addEventListener('submit', (e) => { e.preventDefault(); cercaUtente(); });
-
     const n = numeroDaUrl();
     if (n) { $('numeroInput').value = n; cercaUtente(); }
-
-    const root = document.documentElement, btn = $('themeBtn');
-    const applica = (t) => { root.dataset.theme = t; btn.textContent = t === 'dark' ? '☀️' : '🌙'; };
-    let salvato = null;
-    try { salvato = localStorage.getItem('tema'); } catch {}
-    applica(salvato || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-    btn.addEventListener('click', () => {
-        const t = root.dataset.theme === 'dark' ? 'light' : 'dark';
-        applica(t);
-        try { localStorage.setItem('tema', t); } catch {}
-    });
 });
