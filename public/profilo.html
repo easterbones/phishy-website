@@ -84,7 +84,7 @@ body::after{content:"";position:fixed;inset:0;background:radial-gradient(#000 22
    ========================================= */
 @media (max-width: 768px) {
     body { font-size: 14px; }
-    .wrap { padding: 15px 10px 50px; }
+    .wrap { padding: 15px 12px 50px; }
     
     /* Masthead */
     .mast { min-height: auto; padding: 15px 5px; text-align: center; }
@@ -98,11 +98,11 @@ body::after{content:"";position:fixed;inset:0;background:radial-gradient(#000 22
     .search input { font-size: 1rem; padding: 12px; border-width: 3px; }
     .btn { width: 100%; padding: 12px; font-size: 1rem; justify-content: center; box-shadow: 3px 3px 0 #000; border-width: 3px; }
 
-    /* Hero Profile Card */
+    /* Hero Profile Card - FIX IMMAGINE TROPPO GRANDE */
     .hero { grid-template-columns: 1fr; padding: 15px; gap: 15px; margin-top: 20px; box-shadow: 5px 5px 0 #000; outline-offset: -6px; }
-    .por { max-width: 100%; width: 100%; rotate: 0deg; margin: 0 auto; }
-    .por img { box-shadow: 3px 3px 0 var(--mag); border-width: 3px; }
-    .seal { width: 85px; height: 85px; right: 5px; bottom: -15px; border-width: 3px; box-shadow: 3px 3px 0 #000, inset 0 0 0 4px var(--rose), inset 0 0 0 6px var(--gold); }
+    .por { max-width: 280px; width: 100%; margin: 0 auto; rotate: 0deg; } /* Centra e limita la larghezza */
+    .por img { max-height: 190px; object-fit: cover; border-width: 3px; box-shadow: 4px 4px 0 var(--mag); } /* Limita l'altezza per non occupare tutto lo schermo */
+    .seal { width: 76px; height: 76px; right: -10px; bottom: -15px; border-width: 3px; box-shadow: 3px 3px 0 #000, inset 0 0 0 4px var(--rose), inset 0 0 0 6px var(--gold); }
     .seal b { font-size: 1.4rem; }
     .seal small { font-size: 0.45rem; }
     
@@ -122,10 +122,10 @@ body::after{content:"";position:fixed;inset:0;background:radial-gradient(#000 22
     .cnt { font-size: 0.8rem; padding: 3px 8px; border-width: 2px; }
 
     /* Stats Grid */
-    .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
     .tile { padding: 12px 10px; box-shadow: 4px 4px 0 #000; outline-offset: -6px; rotate: 0deg !important; }
     .tile:hover { translate: 2px 2px; box-shadow: 2px 2px 0 #000; }
-    .ico { width: 32px; height: 32px; font-size: 1.1rem; margin-bottom: 8px; border-width: 2px; box-shadow: 2px 2px 0 rgba(255,255,255,.7); }
+    .ico { width: 34px; height: 34px; font-size: 1.1rem; margin-bottom: 8px; border-width: 2px; box-shadow: 2px 2px 0 rgba(255,255,255,.7); }
     .tile b { font-size: 1.3rem; margin-bottom: 4px; }
     .tile span { font-size: 0.8rem; }
 
@@ -158,6 +158,20 @@ body::after{content:"";position:fixed;inset:0;background:radial-gradient(#000 22
     /* Loader */
     .loader { margin: 30px; gap: 8px; }
     .loader i { width: 20px; height: 20px; border-width: 3px; }
+}
+
+/* Fallback per schermi molto stretti (es. 320px) */
+@media (max-width: 380px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .tile b { font-size: 1.1rem; }
+    .tile span { font-size: 0.7rem; }
+    .ico { width: 28px; height: 28px; font-size: 0.9rem; }
+    .bd { font-size: 0.6rem; padding: 3px 6px; }
+    .por { max-width: 240px; }
+    .por img { max-height: 160px; }
+    .seal { width: 64px; height: 64px; right: -5px; bottom: -10px; }
+    .seal b { font-size: 1.1rem; }
+    .seal small { font-size: 0.35rem; }
 }
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
