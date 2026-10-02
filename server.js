@@ -10,6 +10,15 @@ const app = express();
 const mongoURI = process.env.MONGODB_URI;
 const SHOP_SECRET = process.env.SHOP_SECRET;
 
+// Gestione middleware CORS (abilitato prima di qualsiasi rotta API)
+app.use('/api', (req, res, next) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+});
+
 // Middleware per il parsing del body JSON
 app.use(express.json());
 
@@ -29,18 +38,13 @@ function connect() {
     return connPromise;
 }
 
-// CORS per l'API
-app.use('/api', (req, res, next) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') return res.sendStatus(204);
-    next();
-});
-
 // Helper per verificare il token inviato dal frontend
 function verifyToken(token) {
-    if (!SHOP_SECRET || !token) return null;
+    if (!SHOP_SECRET) {
+        console.error('[AUTH ERROR] SHOP_SECRET non è definita nelle variabili d\'ambiente del server!');
+        return null;
+    }
+    if (!token) return null;
     const parts = token.split('.');
     if (parts.length !== 2) return null;
     const [p, sig] = parts;
@@ -269,8 +273,9 @@ app.get('/api/profilo/:numero', async (req, res) => {
     }
 });
 
-// Servizio file statici
+// Servizio file statici e rotte HTML
 app.get('/profilo/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'profilo.html')));
+app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/profilo.html'));
 
