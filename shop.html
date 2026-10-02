@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Negozio Phishy</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Playfair+Display:ital,wght@1,700;1,800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f5efdc;--gold:#c9a24b;--rose:#c27c8a;--dark:#1a1210;--teal:#00c2cb;--mag:#ff2bd6;--yel:#ffe600;--vio:#5b3bff;--ore:#ff5a1f}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding-bottom:110px;font:500 1rem 'Space Grotesk',system-ui,sans-serif;color:#000;overflow-x:hidden;
+ background:radial-gradient(circle at 15% 8%,rgba(255,43,214,.28),transparent 40%),radial-gradient(circle at 85% 65%,rgba(0,194,203,.22),transparent 42%),var(--dark)}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(#000 22%,transparent 24%) 0 0/9px 9px;opacity:.28;pointer-events:none}
+.ic{width:1.2em;height:1.2em;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linejoin:miter;stroke-linecap:square;vertical-align:-.2em;flex:none}
+.wrap{position:relative;max-width:1040px;margin:0 auto;padding:26px 16px}
+.top{display:flex;flex-wrap:wrap;gap:18px;justify-content:space-between;align-items:center}
+h1{margin:0;display:flex;gap:5px;flex-wrap:wrap}
+h1 span{font:400 clamp(2.2rem,8vw,4.4rem)/1 'Archivo Black';padding:0 .08em;border:4px solid #000;box-shadow:5px 5px 0 #000;animation:wig 3s ease-in-out infinite;animation-delay:calc(var(--k)*-.4s)}
+h1 span:nth-child(4n+1){background:var(--mag);rotate:-3deg}h1 span:nth-child(4n+2){background:var(--paper);rotate:2deg}h1 span:nth-child(4n+3){background:var(--teal);rotate:-1deg}h1 span:nth-child(4n){background:var(--yel);rotate:3deg}
+@keyframes wig{50%{translate:0 -6px}}
+.wallet{display:flex;gap:10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--paper);border:4px solid #000;box-shadow:4px 4px 0 #000;font:400 1rem 'Archivo Black'}
+.chip small{font:700 .7rem 'Space Grotesk';text-transform:uppercase;opacity:.7}
+.tabs{display:flex;gap:10px;margin:26px 0 8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font:400 1rem 'Archivo Black';text-transform:uppercase;padding:10px 20px;border:4px solid #000;background:var(--yel);color:#000;box-shadow:5px 5px 0 #000;transition:.12s}
+.btn:hover:not(:disabled){translate:3px 3px;box-shadow:2px 2px 0 #000;background:var(--mag)}.btn:active:not(:disabled){translate:5px 5px;box-shadow:0 0 0}
+.btn:disabled{opacity:.45;cursor:not-allowed}.btn.alt{background:var(--paper)}.btn.on{background:var(--teal)}
+.btn:focus-visible,.stp button:focus-visible{outline:4px solid var(--vio);outline-offset:2px}
+.card{position:relative;background:var(--paper);border:4px solid #000;box-shadow:7px 7px 0 #000;outline:2px solid var(--gold);outline-offset:-10px}
+.rib{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:38px 0 18px;padding:9px 20px;background:var(--rose);border-block:4px solid #000;box-shadow:0 6px 0 #000;color:#fff7e6;font:italic 800 clamp(1.3rem,4vw,1.8rem)/1 'Playfair Display',serif;rotate:-.6deg;outline:2px solid var(--gold);outline-offset:-9px}
+.rib>span{display:flex;align-items:center;gap:12px}
+.cnt{background:#000;color:var(--gold);border:3px solid var(--gold);padding:3px 12px;font:italic 700 1rem 'Playfair Display',serif}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:22px}
+.item{padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--b,var(--paper));transition:.12s;animation:pop .5s cubic-bezier(.3,1.6,.5,1) backwards;animation-delay:calc(var(--i,0)*40ms)}
+.item:nth-child(6n+1){--b:#bff3f5}.item:nth-child(6n+2){--b:#ffd1f3}.item:nth-child(6n+3){--b:#fff7a8}.item:nth-child(6n+5){--b:#d9d0ff}.item:nth-child(6n){--b:#ffd5c0}
+@keyframes pop{0%{opacity:0;transform:translateY(24px) scale(.9)}}
+.item img{width:100%;aspect-ratio:1;object-fit:cover;border:4px solid #000;background:#fff}
+.item h3{margin:0;font:400 1.05rem/1.15 'Archivo Black';min-height:2.3em}
+.price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font:400 1.3rem 'Archivo Black'}
+.price s{font:700 .9rem 'Space Grotesk';opacity:.6}
+.off{position:absolute;top:-12px;right:-12px;rotate:6deg;background:var(--mag);color:#fff;border:3px solid #000;box-shadow:3px 3px 0 #000;padding:3px 9px;font:400 .85rem 'Archivo Black'}
+.left{font:700 .75rem 'Space Grotesk';text-transform:uppercase}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.stp{display:inline-flex;border:4px solid #000;background:#fff}
+.stp button{width:34px;height:34px;display:grid;place-items:center;border:0;background:var(--yel);cursor:pointer;font-size:1rem}.stp button:hover{background:var(--mag)}
+.stp output{min-width:38px;text-align:center;align-self:center;font:400 1rem 'Archivo Black'}
+.item .btn{padding:8px 12px;font-size:.85rem;box-shadow:3px 3px 0 #000}
+.cartbar{position:fixed;left:50%;bottom:16px;translate:-50% 0;z-index:5;width:min(560px,calc(100% - 24px));justify-content:space-between;padding:14px 20px;font-size:1.1rem;background:var(--teal)}
+.cartbar b{background:#000;color:var(--yel);padding:2px 10px}
+.drawer{position:fixed;inset:0;z-index:10;display:flex;justify-content:flex-end;background:rgba(0,0,0,.6)}
+.drawer>.card{width:min(460px,100%);height:100%;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:14px;animation:slide .3s cubic-bezier(.3,1.3,.5,1)}
+@keyframes slide{from{translate:100% 0}}
+.drawer h2{margin:0;display:flex;justify-content:space-between;align-items:center;font:italic 800 1.8rem 'Playfair Display',serif}
+.line{display:grid;grid-template-columns:1fr auto;gap:6px 10px;padding:10px 0;border-top:3px dashed #000}
+.line strong{font:400 1rem 'Archivo Black'}.line .sum{font:400 1rem 'Archivo Black';text-align:right}
+.tot{display:flex;justify-content:space-between;font:400 1.5rem 'Archivo Black';border-top:4px solid #000;padding-top:12px}
+.chk{display:flex;gap:10px;align-items:center;font-weight:700}.chk input{width:22px;height:22px;accent-color:#000}
+.msg{padding:12px 14px;border:4px solid #000;font-weight:700;background:var(--yel)}.msg.bad{background:var(--mag);color:#fff}.msg.ok{background:var(--teal)}
+.toast{position:fixed;top:16px;left:50%;translate:-50% 0;z-index:20;max-width:92vw;padding:12px 18px;border:4px solid #000;box-shadow:6px 6px 0 #000;background:var(--teal);font:400 1rem 'Archivo Black';animation:pop .4s}
+.toast.bad{background:var(--mag);color:#fff}
+.empty{padding:28px;text-align:center;font:italic 700 1.3rem 'Playfair Display',serif}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-cart" viewBox="0 0 24 24"><path d="M2 3h3l3 12h11l2-8H6M9 20h2M17 20h2"/></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l1 13H4zM8 8V6a4 4 0 018 0v2"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M4 12h16"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v8M14 10v8"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
+<symbol id="i-candy" viewBox="0 0 24 24"><path d="M8 8h8v8H8zM8 12L2 8v8zM16 12l6-4v8z"/></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><path d="M2 5h20v14H2zM2 10h20M6 15h5"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.8-6.3 3.8 1.7-7L2 9.2l7.1-.6z"/></symbol>
+<symbol id="i-potion" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3M7 15h10"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M3 15v-4l2-5h14l2 5v4zM3 15v3h4v-3M17 15v3h4v-3M5 11h14"/></symbol>
+<symbol id="i-rod" viewBox="0 0 24 24"><path d="M3 21L17 5M17 5c3 0 4 3 3 6M20 11v4a2 2 0 11-2 0"/></symbol>
+<symbol id="i-seed" viewBox="0 0 24 24"><path d="M12 22V10M12 10C12 5 8 3 4 3c0 5 3 7 8 7M12 14c0-4 3-6 8-6 0 5-3 6-8 6"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2l9 3v7c0 5-4 8-9 10-5-2-9-5-9-10V5z"/></symbol>
+<symbol id="i-house" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v11h14V10M10 21v-6h4v6"/></symbol>
+<symbol id="i-paw" viewBox="0 0 24 24"><circle cx="6" cy="10" r="2"/><circle cx="10" cy="6" r="2"/><circle cx="14" cy="6" r="2"/><circle cx="18" cy="10" r="2"/><path d="M12 12c4 0 6 5 5 7s-3 1-5 1-4 1-5-1 1-7 5-7z"/></symbol>
+<symbol id="i-fleur" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 1c3 4 3 8 0 12-3-4-3-8 0-12zM11 14c-3-1-6 0-9-1 1 5 6 6 9 4v5h2v-5c3 2 8 1 9-4-3 1-6 0-9 1z"/></symbol>
+</defs></svg>
+
+<main class="wrap">
+  <header class="top">
+    <h1 aria-label="Negozio"><span style="--k:1">N</span><span style="--k:2">E</span><span style="--k:3">G</span><span style="--k:4">O</span><span style="--k:5">Z</span><span style="--k:6">I</span><span style="--k:7">O</span></h1>
+    <div class="wallet" id="wallet"></div>
+  </header>
+  <nav class="tabs">
+    <button class="btn on" data-tab="shop"><svg class="ic"><use href="#i-cart"/></svg>Negozio</button>
+    <button class="btn alt" data-tab="bag"><svg class="ic"><use href="#i-bag"/></svg>Zaino</button>
+  </nav>
+  <section id="view"></section>
+</main>
+
+<button class="btn cartbar" id="cartBtn" hidden></button>
+<div class="drawer" id="drawer" hidden><div class="card" id="drawerBody"></div></div>
+<div class="toast" id="toast" hidden></div>
+<script src="/shop-web.js"></script>
+</body>
+</html>
