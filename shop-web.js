@@ -1,6 +1,6 @@
 // URL del server API
 const API_BASE = 'https://phishy-websites.onrender.com';
-const PLACEHOLDER_IMG = 'public/img/phishy-vestito_rosso_fisheye.jpeg';
+const PLACEHOLDER_IMG = 'public/img/idk.jpg';
 
 // Mappa delle immagini per ogni oggetto dello shop
 const ITEM_IMAGES = {
