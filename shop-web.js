@@ -1,6 +1,67 @@
 // URL del server API
 const API_BASE = 'https://phishy-websites.onrender.com';
-const PLACEHOLDER_IMG = '/img/phishy-vestito_rosso_fisheye.jpeg';
+const PLACEHOLDER_IMG = 'public/img/phishy-vestito_rosso_fisheye.jpeg';
+
+// Mappa delle immagini per ogni oggetto dello shop
+const ITEM_IMAGES = {
+    // Pozioni
+    pozioneminore: 'public/img/pozioneminore.jpeg',
+    pozionemaggiore: 'public/img/pozionemaggiore.jpeg',
+    pozionedefinitiva: 'public/img/pozionedefinitiva.jpeg',
+
+    // Veicoli
+    macchina: 'public/img/macchina.jpeg',
+    moto: 'public/img/moto.jpeg',
+    bici: 'public/img/bici.jpeg',
+
+    // Attrezzi
+    canna: 'public/img/canna.jpeg',
+
+    // Semi
+    seme_comune: 'public/img/seme_comune.jpeg',
+    seme_raro: 'public/img/seme_raro.jpeg',
+    seme_tossico: 'public/img/seme_tossico.jpeg',
+
+    // Protezioni
+    vita: 'public/img/vita.jpeg',
+    scudo: 'public/img/scudo.jpeg',
+    scudo3h: 'public/img/scudo3h.jpeg',
+    scudo6h: 'public/img/scudo6h.jpeg',
+    scudo12h: 'public/img/scudo12h.jpeg',
+
+    // Speciali
+    flamePass: 'public/img/flamePass.jpeg',
+    joincount: 'public/img/joincount.jpeg',
+    forcina: 'public/img/forcina.jpeg',
+    filtro: 'public/img/filtro.jpeg',
+    lente: 'public/img/lente.jpeg',
+    nametag: 'public/img/nametag.jpeg',
+
+    // Animali
+    cane: 'public/img/cane.jpeg',
+    pollo: 'public/img/pollo.jpeg',
+    gatto: 'public/img/gatto.jpeg',
+    coniglio: 'public/img/coniglio.jpeg',
+    drago: 'public/img/drago.jpeg',
+    piccione: 'public/img/piccione.jpeg',
+    serpente: 'public/img/serpente.jpeg',
+    cavallo: 'public/img/cavallo.jpeg',
+    pesce: 'public/img/pesce.jpeg',
+    riccio: 'public/img/riccio.jpeg',
+    scoiattolo: 'public/img/scoiattolo.jpeg',
+    polpo: 'public/img/polpo.jpeg',
+    ragno: 'public/img/ragno.jpeg',
+    scorpione: 'public/img/scorpione.jpeg',
+
+    // Case
+    monolocale: 'public/img/monolocale.jpeg',
+    villa: 'public/img/villa.jpeg',
+    castello: 'public/img/castello.jpeg'
+};
+
+function getItemImage(key) {
+    return ITEM_IMAGES[key] || `public/img/${key}.jpeg`;
+}
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('it-IT');
@@ -59,7 +120,7 @@ function renderShop() {
           const q = S.sel['shop:' + i.key] || 1;
           return `<article class="card item" style="--i:${n}">
             ${off ? `<span class="off">-${i.discount}%</span>` : ''}
-            <img src="${PLACEHOLDER_IMG}" alt="" width="200" height="200" onerror="this.style.visibility='hidden'">
+            <img src="${getItemImage(i.key)}" alt="${esc(clean(i.name))}" width="200" height="200" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';">
             <h3>${esc(clean(i.name))}</h3>
             <div class="price">${ic('candy')}${nf.format(p)}${off ? `<s>${nf.format(i.price)}</s>` : ''}</div>
             ${owned ? `<span class="left">Ne hai ${nf.format(owned)}</span>` : ''}
@@ -74,7 +135,7 @@ function renderBag() {
         ? `<div class="grid">${rows.map(({ i, owned }, n) => {
             const q = Math.min(S.sel['sell:' + i.key] || 1, owned);
             return `<article class="card item" style="--i:${n}">
-              <img src="${PLACEHOLDER_IMG}" alt="" width="200" height="200" onerror="this.style.visibility='hidden'">
+              <img src="${getItemImage(i.key)}" alt="${esc(clean(i.name))}" width="200" height="200" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';">
               <h3>${esc(clean(i.name))}</h3><span class="left">Ne hai ${nf.format(owned)}</span>
               <div class="price">${ic('candy')}${nf.format(i.sell)}<s>cad.</s></div>
               <div class="row">${stepper('sell:' + i.key, q)}<button class="btn" data-sell="${i.key}">Vendi</button></div>
