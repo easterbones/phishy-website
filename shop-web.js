@@ -114,19 +114,23 @@ function renderWallet() {
 function renderShop() {
     $('view').innerHTML = S.catalog.map((c) => `
       <div class="rib"><span>${ic(CAT_ICON[c.name] || 'star')}${esc(clean(c.name))}</span><span class="cnt">${c.items.length}</span></div>
-      <div class="grid">${c.items.map((i, n) => {
-          const p = price(i), off = p < i.price, owned = S.inv[i.key] || 0;
-          const locked = HOUSES.includes(i.key) && S.user.casa;
-          const q = S.sel['shop:' + i.key] || 1;
-          return `<article class="card item" style="--i:${n}">
-            ${off ? `<span class="off">-${i.discount}%</span>` : ''}
-            <img src="${getItemImage(i.key)}" alt="${esc(clean(i.name))}" width="200" height="200" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';">
-            <h3>${esc(clean(i.name))}</h3>
-            <div class="price">${ic('candy')}${nf.format(p)}${off ? `<s>${nf.format(i.price)}</s>` : ''}</div>
-            ${owned ? `<span class="left">Ne hai ${nf.format(owned)}</span>` : ''}
-            <div class="row">${stepper('shop:' + i.key, q)}<button class="btn" data-add="${i.key}" ${locked ? 'disabled title="Hai già una casa"' : ''}>${ic('plus')}Aggiungi</button></div>
-          </article>`;
-      }).join('')}</div>`).join('');
+      <div class="carousel-wrap">
+        <div class="carousel">
+          ${c.items.map((i, n) => {
+              const p = price(i), off = p < i.price, owned = S.inv[i.key] || 0;
+              const locked = HOUSES.includes(i.key) && S.user.casa;
+              const q = S.sel['shop:' + i.key] || 1;
+              return `<article class="card item" style="--i:${n}">
+                ${off ? `<span class="off">-${i.discount}%</span>` : ''}
+                <img src="${getItemImage(i.key)}" alt="${esc(clean(i.name))}" width="200" height="200" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';">
+                <h3>${esc(clean(i.name))}</h3>
+                <div class="price">${ic('candy')}${nf.format(p)}${off ? `<s>${nf.format(i.price)}</s>` : ''}</div>
+                ${owned ? `<span class="left">Ne hai ${nf.format(owned)}</span>` : ''}
+                <div class="row">${stepper('shop:' + i.key, q)}<button class="btn" data-add="${i.key}" ${locked ? 'disabled title="Hai già una casa"' : ''}>${ic('plus')}Aggiungi</button></div>
+              </article>`;
+          }).join('')}
+        </div>
+      </div>`).join('');
 }
 
 function renderBag() {
