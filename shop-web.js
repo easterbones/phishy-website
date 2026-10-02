@@ -1,6 +1,67 @@
-// URL del server API. '' se il sito è servito dallo stesso server (consigliato).
-const API_BASE = '';
-const PLACEHOLDER_IMG = '/assets/img/avatar-logo.png';
+// URL del server API
+const API_BASE = 'https://phishy-websites.onrender.com';
+const PLACEHOLDER_IMG = '/img/phishy-vestito_rosso_fisheye.jpeg';
+
+// Mappa delle immagini per ogni oggetto dello shop
+const ITEM_IMAGES = {
+    // Pozioni
+    pozioneminore: '/img/pozioneminore.png',
+    pozionemaggiore: '/img/pozionemaggiore.png',
+    pozionedefinitiva: '/img/pozionedefinitiva.png',
+
+    // Veicoli
+    macchina: '/img/macchina.png',
+    moto: '/img/moto.png',
+    bici: '/img/bici.png',
+
+    // Attrezzi
+    canna: '/img/canna.png',
+
+    // Semi
+    seme_comune: '/img/seme_comune.png',
+    seme_raro: '/img/seme_raro.png',
+    seme_tossico: '/img/seme_tossico.png',
+
+    // Protezioni
+    vita: '/img/vita.png',
+    scudo: '/img/scudo.png',
+    scudo3h: '/img/scudo3h.png',
+    scudo6h: '/img/scudo6h.png',
+    scudo12h: '/img/scudo12h.png',
+
+    // Speciali
+    flamePass: '/img/flamePass.png',
+    joincount: '/img/joincount.png',
+    forcina: '/img/forcina.png',
+    filtro: '/img/filtro.png',
+    lente: '/img/lente.png',
+    nametag: '/img/nametag.png',
+
+    // Animali
+    cane: '/img/cane.png',
+    pollo: '/img/pollo.png',
+    gatto: '/img/gatto.png',
+    coniglio: '/img/coniglio.png',
+    drago: '/img/drago.png',
+    piccione: '/img/piccione.png',
+    serpente: '/img/serpente.png',
+    cavallo: '/img/cavallo.png',
+    pesce: '/img/pesce.png',
+    riccio: '/img/riccio.png',
+    scoiattolo: '/img/scoiattolo.png',
+    polpo: '/img/polpo.png',
+    ragno: '/img/ragno.png',
+    scorpione: '/img/scorpione.png',
+
+    // Case
+    monolocale: '/img/monolocale.png',
+    villa: '/img/villa.png',
+    castello: '/img/castello.png'
+};
+
+function getItemImage(key) {
+    return ITEM_IMAGES[key] || `/img/${key}.png`;
+}
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('it-IT');
@@ -27,9 +88,19 @@ function toast(t, bad) {
 }
 
 async function api(path, opt = {}) {
-    const r = await fetch(API_BASE + path, { ...opt, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + TOKEN } });
-    if (!(r.headers.get('content-type') || '').includes('application/json')) throw new Error('Il server non risponde come previsto (HTTP ' + r.status + ').');
-    return r.json();
+    const headers = { 'Content-Type': 'application/json' };
+    if (TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
+    
+    const r = await fetch(API_BASE + path, { ...opt, headers: { ...headers, ...(opt.headers || {}) } });
+    const contentType = r.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        throw new Error('Il server non ha risposto in formato JSON (HTTP ' + r.status + ').');
+    }
+    const data = await r.json();
+    if (!r.ok && !data.message) {
+        throw new Error('Errore HTTP ' + r.status);
+    }
+    return data;
 }
 
 function stepper(id, v) {
@@ -37,8 +108,7 @@ function stepper(id, v) {
 }
 
 function renderWallet() {
-    if (!S.user) { $('wallet').innerHTML = ''; return; }
-    $('wallet').innerHTML = `<span class="chip">${ic('candy')}<span>${nf.format(S.user.limit)}<br><small>Portafoglio</small></span></span><span class="chip">${ic('card')}<span>${nf.format(S.user.credito)}<br><small>Carta</small></span></span>`;
+    if (!S.user) { $('wallet').innerHTML = ''; return; }$('wallet').innerHTML = `<span class="chip">${ic('candy')}<span>${nf.format(S.user.limit)}<br><small>Portafoglio</small></span></span><span class="chip">${ic('card')}<span>${nf.format(S.user.credito)}<br><small>Carta</small></span></span>`;
 }
 
 function renderShop() {
@@ -50,7 +120,7 @@ function renderShop() {
           const q = S.sel['shop:' + i.key] || 1;
           return `<article class="card item" style="--i:${n}">
             ${off ? `<span class="off">-${i.discount}%</span>` : ''}
-            <img src="${PLACEHOLDER_IMG}" alt="" width="200" height="200" onerror="this.style.visibility='hidden'">
+            <img src="${getItemImage(i.key)}" alt="${esc(clean(i.name))}" width="200" height="200" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';">
             <h3>${esc(clean(i.name))}</h3>
             <div class="price">${ic('candy')}${nf.format(p)}${off ? `<s>${nf.format(i.price)}</s>` : ''}</div>
             ${owned ? `<span class="left">Ne hai ${nf.format(owned)}</span>` : ''}
@@ -65,7 +135,7 @@ function renderBag() {
         ? `<div class="grid">${rows.map(({ i, owned }, n) => {
             const q = Math.min(S.sel['sell:' + i.key] || 1, owned);
             return `<article class="card item" style="--i:${n}">
-              <img src="${PLACEHOLDER_IMG}" alt="" width="200" height="200" onerror="this.style.visibility='hidden'">
+              <img src="${getItemImage(i.key)}" alt="${esc(clean(i.name))}" width="200" height="200" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';">
               <h3>${esc(clean(i.name))}</h3><span class="left">Ne hai ${nf.format(owned)}</span>
               <div class="price">${ic('candy')}${nf.format(i.sell)}<s>cad.</s></div>
               <div class="row">${stepper('sell:' + i.key, q)}<button class="btn" data-sell="${i.key}">Vendi</button></div>
@@ -80,13 +150,12 @@ function renderCartBar() {
 }
 
 function renderDrawer() {
-    const lines = cartLines(), t = total(), u = S.user;
+    const lines = cartLines(), t = total(), u = S.user || { limit: 0, credito: 0 };
     const fund = S.mixed ? u.limit + u.credito : u.limit;
     const ok = lines.length && t <= fund && !S.busy;
     $('drawerBody').innerHTML = `
       <h2>Carrello <button class="btn alt" id="closeDrawer" aria-label="Chiudi">${ic('close')}</button></h2>
-      ${lines.length ? lines.map((l) => `<div class="line"><strong>${esc(clean(l.i.name))}</strong><span class="sum">${nf.format(price(l.i) * l.q)}</span>
-        ${stepper('cart:' + l.i.key, l.q)}<button class="btn alt" data-rm="${l.i.key}" aria-label="Rimuovi">${ic('trash')}</button></div>`).join('') : '<div class="empty">Il carrello è vuoto.</div>'}
+      ${lines.length ? lines.map((l) => `<div class="line"><strong>${esc(clean(l.i.name))}</strong><span class="sum">${nf.format(price(l.i) * l.q)}</span>${stepper('cart:' + l.i.key, l.q)}<button class="btn alt" data-rm="${l.i.key}" aria-label="Rimuovi">${ic('trash')}</button></div>`).join('') : '<div class="empty">Il carrello è vuoto.</div>'}
       <div class="tot"><span>Totale</span><span>${ic('candy')} ${nf.format(t)}</span></div>
       <div class="row"><span>Saldo portafoglio</span><strong>${nf.format(u.limit)}</strong></div>
       <label class="chk"><input type="checkbox" id="mixed" ${S.mixed ? 'checked' : ''}> Usa anche la carta se serve (${nf.format(u.credito)})</label>
@@ -102,7 +171,6 @@ function renderAll() {
     if (!$('drawer').hidden) renderDrawer();
 }
 
-// Invia l'ordine (coda su Mongo) e attende che il bot lo applichi
 async function sendOrder(type, lines) {
     if (S.busy) return;
     S.busy = true; S.msg = null; renderAll();
@@ -127,12 +195,15 @@ async function sendOrder(type, lines) {
 
 async function load() {
     try {
+        if (!TOKEN) {
+            throw new Error('Manca il token di accesso. Apri il link dello shop generato dal bot WhatsApp.');
+        }
         const r = await api('/api/shop/state');
         if (!r.success) throw new Error(r.message);
         S.catalog = r.catalog; S.user = r.user; S.inv = r.inventory || {};
         renderAll();
     } catch (e) {
-        $('view').innerHTML = `<div class="card empty">${esc(e.message || 'Impossibile caricare il negozio.')}<br>Apri di nuovo il negozio dal bot su WhatsApp.</div>`;
+        $('view').innerHTML = `<div class="card empty">${esc(e.message || 'Impossibile caricare il negozio.')}<br><br><small>Apri di nuovo il negozio tramite il comando sul bot WhatsApp.</small></div>`;
     }
 }
 
@@ -170,7 +241,7 @@ document.addEventListener('click', (e) => {
     if (t.id === 'pay') return sendOrder('buy', cartLines().map((l) => ({ key: l.i.key, qty: l.q })));
 });
 document.addEventListener('change', (e) => { if (e.target.id === 'mixed') { S.mixed = e.target.checked; renderDrawer(); } });
-$('drawer').addEventListener('click', (e) => { if (e.target.id === 'drawer') $('drawer').hidden = true; });
+$('drawer').addEventListener('click', (e) => { if (e.target.id === 'drawer')$('drawer').hidden = true; });
 
 load();
-setInterval(() => { if (!S.busy && document.visibilityState === 'visible') load(); }, 60000);   // aggiorna sconti e saldo
+setInterval(() => { if (!S.busy && document.visibilityState === 'visible' && TOKEN) load(); }, 60000);
