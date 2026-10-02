@@ -1,66 +1,66 @@
 // URL del server API
 const API_BASE = 'https://phishy-websites.onrender.com';
-const PLACEHOLDER_IMG = '/img/phishy-vestito_rosso_fisheye.jpeg';
+const PLACEHOLDER_IMG = 'public/img/phishy-vestito_rosso_fisheye.jpeg';
 
 // Mappa delle immagini per ogni oggetto dello shop
 const ITEM_IMAGES = {
     // Pozioni
-    pozioneminore: '/img/pozioneminore.png',
-    pozionemaggiore: '/img/pozionemaggiore.png',
-    pozionedefinitiva: '/img/pozionedefinitiva.png',
+    pozioneminore: 'public/img/pozioneminore.png',
+    pozionemaggiore: 'public/img/pozionemaggiore.png',
+    pozionedefinitiva: 'public/img/pozionedefinitiva.png',
 
     // Veicoli
-    macchina: '/img/macchina.png',
-    moto: '/img/moto.png',
-    bici: '/img/bici.png',
+    macchina: 'public/img/macchina.png',
+    moto: 'public/img/moto.png',
+    bici: 'public/img/bici.png',
 
     // Attrezzi
-    canna: '/img/canna.png',
+    canna: 'public/img/canna.png',
 
     // Semi
-    seme_comune: '/img/seme_comune.png',
-    seme_raro: '/img/seme_raro.png',
-    seme_tossico: '/img/seme_tossico.png',
+    seme_comune: 'public/img/seme_comune.png',
+    seme_raro: 'public/img/seme_raro.png',
+    seme_tossico: 'public/img/seme_tossico.png',
 
     // Protezioni
-    vita: '/img/vita.png',
-    scudo: '/img/scudo.png',
-    scudo3h: '/img/scudo3h.png',
-    scudo6h: '/img/scudo6h.png',
-    scudo12h: '/img/scudo12h.png',
+    vita: 'public/img/vita.png',
+    scudo: 'public/img/scudo.png',
+    scudo3h: 'public/img/scudo3h.png',
+    scudo6h: 'public/img/scudo6h.png',
+    scudo12h: 'public/img/scudo12h.png',
 
     // Speciali
-    flamePass: '/img/flamePass.png',
-    joincount: '/img/joincount.png',
-    forcina: '/img/forcina.png',
-    filtro: '/img/filtro.png',
-    lente: '/img/lente.png',
-    nametag: '/img/nametag.png',
+    flamePass: 'public/img/flamePass.png',
+    joincount: 'public/img/joincount.png',
+    forcina: 'public/img/forcina.png',
+    filtro: 'public/img/filtro.png',
+    lente: 'public/img/lente.png',
+    nametag: 'public/img/nametag.png',
 
     // Animali
-    cane: '/img/cane.png',
-    pollo: '/img/pollo.png',
-    gatto: '/img/gatto.png',
-    coniglio: '/img/coniglio.png',
-    drago: '/img/drago.png',
-    piccione: '/img/piccione.png',
-    serpente: '/img/serpente.png',
-    cavallo: '/img/cavallo.png',
-    pesce: '/img/pesce.png',
-    riccio: '/img/riccio.png',
-    scoiattolo: '/img/scoiattolo.png',
-    polpo: '/img/polpo.png',
-    ragno: '/img/ragno.png',
-    scorpione: '/img/scorpione.png',
+    cane: 'public/img/cane.png',
+    pollo: 'public/img/pollo.png',
+    gatto: 'public/img/gatto.png',
+    coniglio: 'public/img/coniglio.png',
+    drago: 'public/img/drago.png',
+    piccione: 'public/img/piccione.png',
+    serpente: 'public/img/serpente.png',
+    cavallo: 'public/img/cavallo.png',
+    pesce: 'public/img/pesce.png',
+    riccio: 'public/img/riccio.png',
+    scoiattolo: 'public/img/scoiattolo.png',
+    polpo: 'public/img/polpo.png',
+    ragno: 'public/img/ragno.png',
+    scorpione: 'public/img/scorpione.png',
 
     // Case
-    monolocale: '/img/monolocale.png',
-    villa: '/img/villa.png',
-    castello: '/img/castello.png'
+    monolocale: 'public/img/monolocale.png',
+    villa: 'public/img/villa.png',
+    castello: 'public/img/castello.png'
 };
 
 function getItemImage(key) {
-    return ITEM_IMAGES[key] || `/img/${key}.png`;
+    return ITEM_IMAGES[key] || `public/img/${key}.png`;
 }
 
 const $ = (id) => document.getElementById(id);
