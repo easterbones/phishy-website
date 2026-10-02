@@ -1,20 +1,23 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-// La stringa di connessione va SOLO nelle variabili d'ambiente (MONGODB_URI)
 const mongoURI = process.env.MONGODB_URI;
+const SHOP_SECRET = process.env.SHOP_SECRET;
+
+// Middleware per il parsing del body JSON
+app.use(express.json());
 
 const DatabaseSchema = new mongoose.Schema({
     data: { type: Object, default: {} }
 }, { minimize: false });
 const Database = mongoose.models.Database || mongoose.model('Database', DatabaseSchema);
 
-// Riusiamo la connessione tra le chiamate
 let connPromise = global._mongoConn;
 function connect() {
     if (!mongoURI) throw new Error('MONGODB_URI non impostata');
@@ -26,17 +29,164 @@ function connect() {
     return connPromise;
 }
 
-// CORS per l'API (così la pagina funziona anche se ospitata su un altro dominio)
+// CORS per l'API
 app.use('/api', (req, res, next) => {
     res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();
 });
 
+// Helper per verificare il token inviato dal frontend
+function verifyToken(token) {
+    if (!SHOP_SECRET || !token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 2) return null;
+    const [p, sig] = parts;
+    
+    const expectedSig = crypto.createHmac('sha256', SHOP_SECRET).update(p).digest('base64url');
+    if (sig !== expectedSig) return null;
+
+    try {
+        const payload = Buffer.from(p, 'base64url').toString('utf8');
+        const [jid, expStr] = payload.split('|');
+        const exp = parseInt(expStr, 10);
+        if (isNaN(exp) || Date.now() > exp) return null;
+        return jid;
+    } catch {
+        return null;
+    }
+}
+
+// Middleware di autenticazione per le rotte dello shop
+function authShop(req, res, next) {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    const jid = verifyToken(token);
+    
+    if (!jid) {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Token non valido o scaduto. Apri di nuovo il negozio dal bot su WhatsApp.' 
+        });
+    }
+    req.userJid = jid;
+    next();
+}
+
 const num = (v, d = 0) => (typeof v === 'number' && isFinite(v) ? v : d);
 const bool = (v) => v === true;
 const str = (v, d = '') => (typeof v === 'string' ? v : d);
+
+// ==================== ROTTE API SHOP ====================
+
+app.get('/api/shop/state', authShop, async (req, res) => {
+    try {
+        await connect();
+        const db = mongoose.connection.db;
+        const shopmeta = db.collection('shopmeta');
+
+        const catalogDoc = await shopmeta.findOne({ _id: 'catalog' });
+        const userDoc = await shopmeta.findOne({ _id: 'user:' + req.userJid });
+
+        if (!catalogDoc) {
+            return res.status(500).json({ success: false, message: 'Catalogo shop non ancora pronto. Riprova tra poco.' });
+        }
+
+        res.set('Cache-Control', 'no-store');
+        res.json({
+            success: true,
+            catalog: catalogDoc.categories || [],
+            user: userDoc ? {
+                limit: userDoc.limit || 0,
+                credito: userDoc.credito || 0,
+                casa: userDoc.casa || null,
+                scudoMs: userDoc.scudoMs || 0
+            } : { limit: 0, credito: 0, casa: null, scudoMs: 0 },
+            inventory: userDoc?.inventory || {}
+        });
+    } catch (error) {
+        console.error('[API shop state]', error.message);
+        res.status(500).json({ success: false, message: 'Errore di comunicazione col database.' });
+    }
+});
+
+app.post('/api/shop/checkout', authShop, async (req, res) => {
+    try {
+        const { type, pay, items } = req.body || {};
+        if (!type || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ success: false, message: 'Dati ordine non validi.' });
+        }
+
+        await connect();
+        const db = mongoose.connection.db;
+        const shoporders = db.collection('shoporders');
+
+        const newOrder = {
+            jid: req.userJid,
+            type,
+            pay: pay === 'mixed' ? 'mixed' : 'wallet',
+            items,
+            status: 'pending',
+            createdAt: new Date()
+        };
+
+        const result = await shoporders.insertOne(newOrder);
+        res.json({ success: true, orderId: result.insertedId.toString() });
+    } catch (error) {
+        console.error('[API shop checkout]', error.message);
+        res.status(500).json({ success: false, message: 'Errore durante la registrazione dell\'ordine.' });
+    }
+});
+
+app.get('/api/shop/order/:id', authShop, async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        await connect();
+        const db = mongoose.connection.db;
+        const shoporders = db.collection('shoporders');
+        const shopmeta = db.collection('shopmeta');
+
+        let objectId;
+        try {
+            objectId = new mongoose.Types.ObjectId(orderId);
+        } catch {
+            return res.status(400).json({ success: false, message: 'ID ordine non valido.' });
+        }
+
+        const order = await shoporders.findOne({ _id: objectId });
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Ordine non trovato.' });
+        }
+
+        const response = {
+            success: true,
+            status: order.status,
+            message: order.message || ''
+        };
+
+        if (order.status === 'done' || order.status === 'rejected') {
+            const userDoc = await shopmeta.findOne({ _id: 'user:' + req.userJid });
+            if (userDoc) {
+                response.user = {
+                    limit: userDoc.limit || 0,
+                    credito: userDoc.credito || 0,
+                    casa: userDoc.casa || null,
+                    scudoMs: userDoc.scudoMs || 0
+                };
+                response.inventory = userDoc.inventory || {};
+            }
+        }
+
+        res.json(response);
+    } catch (error) {
+        console.error('[API shop order]', error.message);
+        res.status(500).json({ success: false, message: 'Errore durante la verifica dell\'ordine.' });
+    }
+});
+
+// ==================== ROTTE API PROFILO ====================
 
 app.get('/api/profilo/:numero', async (req, res) => {
     try {
@@ -47,7 +197,6 @@ app.get('/api/profilo/:numero', async (req, res) => {
         const jid = numero + '@s.whatsapp.net';
 
         await connect();
-        // Stesso documento usato dal bot (il più vecchio), in sola lettura
         const doc = await Database.findOne().sort({ _id: 1 }).lean();
         const users = doc?.data?.users || {};
         const chats = doc?.data?.chats || {};
@@ -57,13 +206,11 @@ app.get('/api/profilo/:numero', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Utente non trovato. Hai mai interagito con il bot?' });
         }
 
-        // Privacy: il partner (un JID = numero di telefono) viene mostrato solo come nome
         const partnerRaw = str(user.partner);
         const partner = partnerRaw.includes('@')
             ? (users[partnerRaw]?.name && users[partnerRaw].name !== '?' ? users[partnerRaw].name : 'Utente')
             : partnerRaw;
 
-        // Privacy: i gruppi vengono mostrati col nome, mai con l'ID; solo valori semplici
         const gruppi = Object.entries(user.groups && typeof user.groups === 'object' ? user.groups : {})
             .slice(0, 50)
             .map(([gid, val]) => {
@@ -122,8 +269,7 @@ app.get('/api/profilo/:numero', async (req, res) => {
     }
 });
 
-// Pagina e JS serviti dalla cartella "public" (profilo.html, profilo-web.js)
-// Link corto: /profilo/393534409026 apre la pagina e cerca subito quel numero
+// Servizio file statici
 app.get('/profilo/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'profilo.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/profilo.html'));
