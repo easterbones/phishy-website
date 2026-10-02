@@ -39,7 +39,8 @@ h1 span:nth-child(4n+1){background:var(--mag);rotate:-3deg}h1 span:nth-child(4n+
   padding:52px 40px 48px;
   perspective:1500px;
   perspective-origin:50% 55%;
-  scroll-snap-type:x proximity;
+  scroll-snap-type:x mandatory; /* Snap più preciso */
+  scroll-behavior:smooth;
   scrollbar-width:thin;scrollbar-color:#000 rgba(0,0,0,.18);
   -webkit-overflow-scrolling:touch;
 }
@@ -51,7 +52,10 @@ h1 span:nth-child(4n+1){background:var(--mag);rotate:-3deg}h1 span:nth-child(4n+
   position:relative;
   flex:0 0 220px;width:220px;
   scroll-snap-align:center;
-  padding:14px;display:flex;flex-direction:column;gap:8px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
   background:var(--b,var(--paper));
   border:4px solid #000;
   box-shadow:8px 10px 0 rgba(0,0,0,.42);
@@ -62,6 +66,7 @@ h1 span:nth-child(4n+1){background:var(--mag);rotate:-3deg}h1 span:nth-child(4n+
   will-change:transform;
   animation:fadeIn .5s ease-out backwards;
   animation-delay:calc(var(--i,0)*30ms);
+  height:100%; /* Fa in modo che tutte le card abbiano la stessa altezza */
 }
 @keyframes fadeIn{0%{opacity:0}}
 
@@ -78,16 +83,48 @@ h1 span:nth-child(4n+1){background:var(--mag);rotate:-3deg}h1 span:nth-child(4n+
 .item:nth-child(6n+1){--b:#bff3f5}.item:nth-child(6n+2){--b:#ffd1f3}.item:nth-child(6n+3){--b:#fff7a8}.item:nth-child(6n+5){--b:#d9d0ff}.item:nth-child(6n){--b:#ffd5c0}
 
 .item img{width:100%;aspect-ratio:1;object-fit:cover;border:4px solid #000;background:#fff}
-.item h3{margin:0;font:400 1.05rem/1.15 'Archivo Black';min-height:2.3em}
+
+/* Gestione dei testi lunghi nel titolo */
+.item h3{
+  margin:0;
+  font:400 1.05rem/1.15 'Archivo Black';
+  min-height:2.3em;
+  display:-webkit-box;
+  -webkit-line-clamp:2; /* Tronca dopo 2 righe */
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
 .price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font:400 1.3rem 'Archivo Black'}
 .price s{font:700 .9rem 'Space Grotesk';opacity:.6}
 .off{position:absolute;top:-12px;right:-12px;rotate:6deg;background:var(--mag);color:#fff;border:3px solid #000;box-shadow:3px 3px 0 #000;padding:3px 9px;font:400 .85rem 'Archivo Black';z-index:1}
 .left{font:700 .75rem 'Space Grotesk';text-transform:uppercase}
-.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
-.stp{display:inline-flex;border:4px solid #000;background:#fff}
+
+/* Spinge i pulsanti in fondo alla card */
+.item .row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:auto; /* Spinge il contenuto in fondo */
+  width:100%;
+}
+
+/* Assicura che il pulsante Aggiungi non si rompa */
+.item .btn{
+  flex:1 1 auto;
+  padding:8px 12px;
+  font-size:.85rem;
+  box-shadow:3px 3px 0 #000;
+  white-space:nowrap; /* Impedisce al testo del pulsante di andare a capo */
+}
+
+/* Gestione del selettore quantità (stepper) */
+.stp{display:inline-flex;border:4px solid #000;background:#fff;flex-shrink:0}
 .stp button{width:34px;height:34px;display:grid;place-items:center;border:0;background:var(--yel);cursor:pointer;font-size:1rem}.stp button:hover{background:var(--mag)}
 .stp output{min-width:38px;text-align:center;align-self:center;font:400 1rem 'Archivo Black'}
-.item .btn{padding:8px 12px;font-size:.85rem;box-shadow:3px 3px 0 #000}
 
 @media(max-width:600px){
   .item{flex:0 0 180px;width:180px}
