@@ -41,41 +41,10 @@ function renderWallet() {
     $('wallet').innerHTML = `<span class="chip">${ic('candy')}<span>${nf.format(S.user.limit)}<br><small>Portafoglio</small></span></span><span class="chip">${ic('card')}<span>${nf.format(S.user.credito)}<br><small>Carta</small></span></span>`;
 }
 
-/* ────────────────────────────────────────────────────────────
-   CAROSELLO — init + aggiornamento curvatura 3D
-   ──────────────────────────────────────────────────────────── */
-const CAROUSEL_MAX_ANGLE = 18; // gradi max di rotazione ai bordi
-
-function updateCarousel(carousel) {
-    const carRect = carousel.getBoundingClientRect();
-    if (!carRect.width) return;
-    const centerX = carRect.left + carRect.width / 2;
-    const half = carRect.width / 2;
-    carousel.querySelectorAll('.item').forEach((item) => {
-        const r = item.getBoundingClientRect();
-        const itemCenterX = r.left + r.width / 2;
-        let offset = (itemCenterX - centerX) / half;
-        offset = Math.max(-1.5, Math.min(1.5, offset));
-        item.style.setProperty('--ry', (offset * CAROUSEL_MAX_ANGLE).toFixed(2) + 'deg');
-    });
-}
-
-function initCarousels() {
-    document.querySelectorAll('.carousel').forEach((c) => {
-        if (!c.dataset.init) {
-            c.dataset.init = '1';
-            c.addEventListener('scroll', () => updateCarousel(c), { passive: true });
-            if ('ResizeObserver' in window) new ResizeObserver(() => updateCarousel(c)).observe(c);
-        }
-    });
-    requestAnimationFrame(() => document.querySelectorAll('.carousel').forEach(updateCarousel));
-}
-/* ──────────────────────────────────────────────────────────── */
-
 function renderShop() {
     $('view').innerHTML = S.catalog.map((c) => `
       <div class="rib"><span>${ic(CAT_ICON[c.name] || 'star')}${esc(clean(c.name))}</span><span class="cnt">${c.items.length}</span></div>
-      <div class="carousel-wrap"><div class="carousel">${c.items.map((i, n) => {
+      <div class="grid">${c.items.map((i, n) => {
           const p = price(i), off = p < i.price, owned = S.inv[i.key] || 0;
           const locked = HOUSES.includes(i.key) && S.user.casa;
           const q = S.sel['shop:' + i.key] || 1;
@@ -87,13 +56,13 @@ function renderShop() {
             ${owned ? `<span class="left">Ne hai ${nf.format(owned)}</span>` : ''}
             <div class="row">${stepper('shop:' + i.key, q)}<button class="btn" data-add="${i.key}" ${locked ? 'disabled title="Hai già una casa"' : ''}>${ic('plus')}Aggiungi</button></div>
           </article>`;
-      }).join('')}</div></div>`).join('');
+      }).join('')}</div>`).join('');
 }
 
 function renderBag() {
     const rows = Object.entries(S.inv).map(([k, owned]) => ({ i: find(k), owned })).filter((r) => r.i && r.i.sell > 0);
     $('view').innerHTML = `<div class="rib"><span>${ic('bag')}Zaino</span><span class="cnt">${rows.length}</span></div>` + (rows.length
-        ? `<div class="carousel-wrap"><div class="carousel">${rows.map(({ i, owned }, n) => {
+        ? `<div class="grid">${rows.map(({ i, owned }, n) => {
             const q = Math.min(S.sel['sell:' + i.key] || 1, owned);
             return `<article class="card item" style="--i:${n}">
               <img src="${PLACEHOLDER_IMG}" alt="" width="200" height="200" onerror="this.style.visibility='hidden'">
@@ -101,7 +70,7 @@ function renderBag() {
               <div class="price">${ic('candy')}${nf.format(i.sell)}<s>cad.</s></div>
               <div class="row">${stepper('sell:' + i.key, q)}<button class="btn" data-sell="${i.key}">Vendi</button></div>
             </article>`;
-        }).join('')}</div></div>` : '<div class="card empty">Lo zaino è vuoto.</div>');
+        }).join('')}</div>` : '<div class="card empty">Lo zaino è vuoto.</div>');
 }
 
 function renderCartBar() {
@@ -127,20 +96,10 @@ function renderDrawer() {
 }
 
 function renderAll() {
-    // salva lo scroll orizzontale dei caroselli prima di ricostruire
-    const scrolls = [];
-    document.querySelectorAll('.carousel').forEach((c, i) => { scrolls[i] = c.scrollLeft; });
-
     renderWallet();
     S.tab === 'shop' ? renderShop() : renderBag();
     renderCartBar();
     if (!$('drawer').hidden) renderDrawer();
-
-    // ripristina lo scroll e inizializza la curvatura 3D
-    document.querySelectorAll('.carousel').forEach((c, i) => {
-        if (scrolls[i] !== undefined) c.scrollLeft = scrolls[i];
-    });
-    initCarousels();
 }
 
 // Invia l'ordine (coda su Mongo) e attende che il bot lo applichi
