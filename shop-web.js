@@ -104,7 +104,7 @@ async function api(path, opt = {}) {
 }
 
 function stepper(id, v) {
-    return `<div class="stp" data-id="${id}"><button type="button" data-d="-1" aria-label="Meno">${ic('minus')}</button><output>${v}</output><button type="button" data-d="1" aria-label="Più">${ic('plus')}</button></div>`;
+    return `<div class="stp" data-id="${id}" style="width: 100%; display: flex; align-items: center; justify-content: space-between;"><button type="button" data-d="-1" aria-label="Meno">${ic('minus')}</button><output>${v}</output><button type="button" data-d="1" aria-label="Più">${ic('plus')}</button></div>`;
 }
 
 function renderWallet() {
@@ -126,7 +126,10 @@ function renderShop() {
                 <h3>${esc(clean(i.name))}</h3>
                 <div class="price">${ic('candy')}${nf.format(p)}${off ? `<s>${nf.format(i.price)}</s>` : ''}</div>
                 ${owned ? `<span class="left">Ne hai ${nf.format(owned)}</span>` : ''}
-                <div class="row">${stepper('shop:' + i.key, q)}<button class="btn" data-add="${i.key}" ${locked ? 'disabled title="Hai già una casa"' : ''}>${ic('plus')}Aggiungi</button></div>
+                <div class="card-actions" style="display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: auto;">
+                  ${stepper('shop:' + i.key, q)}
+                  <button class="btn" style="width: 100%; justify-content: center;" data-add="${i.key}" ${locked ? 'disabled title="Hai già una casa"' : ''}>${ic('plus')}Aggiungi</button>
+                </div>
               </article>`;
           }).join('')}
         </div>
@@ -142,7 +145,10 @@ function renderBag() {
               <img src="${getItemImage(i.key)}" alt="${esc(clean(i.name))}" width="200" height="200" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';">
               <h3>${esc(clean(i.name))}</h3><span class="left">Ne hai ${nf.format(owned)}</span>
               <div class="price">${ic('candy')}${nf.format(i.sell)}<s>cad.</s></div>
-              <div class="row">${stepper('sell:' + i.key, q)}<button class="btn" data-sell="${i.key}">Vendi</button></div>
+              <div class="card-actions" style="display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: auto;">
+                ${stepper('sell:' + i.key, q)}
+                <button class="btn" style="width: 100%; justify-content: center;" data-sell="${i.key}">Vendi</button>
+              </div>
             </article>`;
         }).join('')}</div>` : '<div class="card empty">Lo zaino è vuoto.</div>');
 }
