@@ -269,6 +269,7 @@ app.get('/api/profilo/:numero', async (req, res) => {
     }
 });
 
+
 // Servizio file statici
 app.get('/profilo/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'profilo.html')));
 app.use(express.static(path.join(__dirname, 'public')));
