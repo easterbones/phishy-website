@@ -58,7 +58,7 @@ const groupRulesData = {
       },
       { 
         type: "yellow", 
-        title: "😶‍🌫️ Info Fake", 
+        title: "😶‍‍🌫️ Info Fake", 
         desc: "Presentarsi è opzionale, tuttavia, usare informazioni false (es. genere o età inventati per ingannare) comporta minimo un warn." 
       },
       { 
@@ -99,7 +99,7 @@ const groupRulesData = {
       { 
         type: "yellow", 
         title: "❌ No Contenuti NSFW", 
-        desc: "l'abreviazione per Not Safe For Work (NSFW), indica il divieto di inviare materiale esplicito, che sia pornografico, goliardico, disegnato, meme, softporn o fetish. Sanzione: (badge-yellow)[Warn]\n\nEsiste un gruppo dove è permesso, si chiama (stagger-char)[IQ Negativo]" 
+        desc: "l'abreviazione per Not Safe For Work (NSFW), indica il divieto di inviare materiale esplicito, che sia pornografico, goliardico, meme, softporn o fetish. Sanzione: (badge-yellow)[Warn]\n\nEsiste un gruppo dove è permesso, si chiama (stagger-char)[IQ Negativo]" 
       },
        { 
         type: "red", 
@@ -271,7 +271,7 @@ function showInlineRules(groupId) {
 }
 
 // ==========================================
-// FILTRI COMANDI & COMMENTI MEME
+// FILTRI COMANDI
 // ==========================================
 function filterCommands() {
   const searchInput = document.getElementById('commandSearch').value.toLowerCase();
@@ -294,48 +294,130 @@ function filterCategory(category) {
   });
 }
 
-function addComment(event, memeId) {
-  event.preventDefault();
-  const form = event.target;
-  const author = form.querySelector('.comment-author').value.trim();
-  const text = form.querySelector('.comment-text').value.trim();
-
-  if (!author || !text) return;
-
-  let comments = JSON.parse(localStorage.getItem(`comments_${memeId}`)) || [];
-  comments.push({ author, text });
-  localStorage.setItem(`comments_${memeId}`, JSON.stringify(comments));
-
-  form.reset();
-  loadComments(memeId);
-}
-
-function loadComments(memeId) {
-  const listContainer = document.getElementById(`comments-list-${memeId.split('-')[1]}`);
-  if (!listContainer) return;
-
-  const comments = JSON.parse(localStorage.getItem(`comments_${memeId}`)) || [];
-
-  if (comments.length === 0) {
-    listContainer.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Nessun commento. Scrivine uno tu!</p>';
-    return;
-  }
-
-  listContainer.innerHTML = comments.map(c => `
-    <div style="background:rgba(13,7,20,0.8); padding:0.6rem 0.8rem; border-radius:8px; margin-bottom:0.4rem; border:1px solid var(--border-color);">
-      <strong style="color:var(--accent-green);">${escapeHtml(c.author)}:</strong> 
-      <span style="color:var(--text-main); font-size:0.9rem;">${escapeHtml(c.text)}</span>
-    </div>
-  `).join('');
-}
-
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (s) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
 }
 
+
+// ==========================================
+// GENERAZIONE DINAMICA MEME E COMMENTI DB
+// ==========================================
+
+// 1. Carica la lista dei video dal server
+async function loadMemes() {
+    try {
+        const response = await fetch('/api/memes');
+        const data = await response.json();
+
+        if (data.success) {
+            const feed = document.getElementById('meme-feed');
+            feed.innerHTML = ''; // Pulisce il messaggio di caricamento
+
+            // Genera la grafica per ogni video
+            data.memes.forEach(meme => {
+                const card = document.createElement('div');
+                card.className = 'meme-card';
+                card.id = meme.id;
+                
+                card.innerHTML = `
+                  <h3>${meme.title}</h3>
+                  <div class="video-wrapper">
+                    <video controls>
+                      <source src="vid/${meme.filename}" type="video/mp4">
+                      Il tuo browser non supporta il tag video.
+                    </video>
+                  </div>
+                  
+                  <div class="comments-section" style="margin-top:1rem;">
+                    <h4>Commenti</h4>
+                    <div id="comments-list-${meme.id}" class="comments-container">
+                        <p style="font-size: 0.9em; color: gray;">Caricamento commenti...</p>
+                    </div>
+                    <form class="comment-form" onsubmit="addComment(event, '${meme.id}')">
+                      <input type="text" placeholder="Tuo Nome..." class="comment-author" id="author-${meme.id}" required>
+                      <input type="text" placeholder="Scrivi un commento..." class="comment-text" id="text-${meme.id}" required>
+                      <button type="submit" class="btn btn-primary">Invia</button>
+                    </form>
+                  </div>
+                `;
+                feed.appendChild(card);
+                
+                // Carica i commenti associati a questo video
+                loadComments(meme.id);
+            });
+        }
+    } catch (error) {
+        console.error("Errore nel caricamento dei meme:", error);
+        document.getElementById('meme-feed').innerHTML = '<p>Errore durante il caricamento dei video.</p>';
+    }
+}
+
+// 2. Scarica i commenti del video specifico dal database
+async function loadComments(videoId) {
+    try {
+        const response = await fetch(`/api/memes/${videoId}/comments`);
+        const data = await response.json();
+        
+        const listDiv = document.getElementById(`comments-list-${videoId}`);
+        if (!data.success || data.comments.length === 0) {
+            listDiv.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Nessun commento ancora. Scrivi il primo!</p>';
+            return;
+        }
+
+        // Formatta e mostra i commenti
+        listDiv.innerHTML = data.comments.map(c => `
+             <div style="background:rgba(13,7,20,0.8); padding:0.6rem 0.8rem; border-radius:8px; margin-bottom:0.4rem; border:1px solid var(--border-color); text-align: left;">
+                <strong style="color:var(--accent-green);">${escapeHtml(c.author)}</strong> 
+                <span style="font-size: 0.8em; color: gray; float: right;">
+                    ${new Date(c.date).toLocaleDateString()}
+                </span>
+                <p style="margin: 5px 0 0 0; font-size: 0.95em; color:var(--text-main);">${escapeHtml(c.text)}</p>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error("Errore caricamento commenti:", error);
+    }
+}
+
+// 3. Salva un nuovo commento nel database ed aggiorna la grafica
+async function addComment(event, videoId) {
+    event.preventDefault(); // Evita il ricaricamento della pagina
+    
+    const authorInput = document.getElementById(`author-${videoId}`);
+    const textInput = document.getElementById(`text-${videoId}`);
+    
+    const author = authorInput.value.trim();
+    const text = textInput.value.trim();
+    
+    if (!author || !text) return;
+
+    try {
+        const response = await fetch(`/api/memes/${videoId}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author, text })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            // Pulisci i campi
+            textInput.value = '';
+            // Ricarica i commenti dal DB per mostrarli aggiornati a tutti
+            loadComments(videoId);
+        } else {
+            alert('Errore: Impossibile inviare il commento.');
+        }
+    } catch (error) {
+        console.error("Errore invio commento:", error);
+    }
+}
+
+
 // Inizializzazione al caricamento
 document.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('comments-list-1')) {
-    loadComments('meme-1');
-  }
+    // Se siamo nella pagina dei meme, avvia il caricamento
+    const memeFeed = document.getElementById('meme-feed');
+    if (memeFeed) {
+        loadMemes();
+    }
 });
