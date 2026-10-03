@@ -2,8 +2,28 @@
 // LISTA DEI VIDEO MEME (MODIFICA QUI)
 // ==========================================
 // Inserisci qui i video che hai nella cartella "public/vid".
+
 const videoMemesList = [
-    { filename: 'VID-20260910-WA0038.mp4', title: 'test video' },
+
+
+  
+    { filename: 'post1.mp4', title: 'tutti si uniscono alla battaglia', date: '?' },
+    { filename: 'post2-1.mp4', title: 'tutti si uniscono alla battaglia 2 (parte 1)', date: '?' },
+    { filename: 'post2-2.mp4', title: 'tutti si uniscono alla battaglia 2 (parte 2)', date: '?' },
+    { filename: 'post3.mp4', title: 'tutti si uniscono alla battaglia 3', date: '?' },
+    { filename: 'post4-1.mp4', title: 'tutti si uniscono alla battaglia 4 (parte 1)', date: '?' },
+    { filename: 'post4-2.mp4', title: 'tutti si uniscono alla battaglia 4 (parte 2)', date: '?' },
+    { filename: 'post5-1.mp4', title: 'tutti si uniscono alla battaglia 5 (parte 1)', date: '?' },
+    { filename: 'post5-2.mp4', title: 'tutti si uniscono alla battaglia 5 (parte 2)', date: '?' },
+    { filename: 'post6.mp4', title: 'tutti si uniscono alla battaglia 6', date: '?' },
+    { filename: 'post7-1.mp4', title: 'tutti si uniscono alla battaglia 7 (parte 1)', date: '?' },
+    { filename: 'post7-2.mp4', title: 'tutti si uniscono alla battaglia 7 (parte 2)', date: '?' },
+    { filename: 'post8.mp4', title: 'tutti si uniscono alla battaglia 8', date: '?' },
+    { filename: 'post9.mp4', title: 'tutti si uniscono alla battaglia 9', date: '?' },
+    { filename: 'post10.mp4', title: 'tutti si uniscono alla battaglia 10', date: '?' },
+    { filename: 'post11.mp4', title: 'tutti si uniscono alla battaglia 11', date: '?' },
+
+
     // Aggiungi qui altri video copiando la riga sopra
 ];
 
@@ -322,7 +342,7 @@ function loadMemes() {
           <h3>${meme.title}</h3>
           <div class="video-wrapper">
             <video controls>
-              <source src="public/vid/${meme.filename}" type="video/mp4">
+              <source src="vid/${meme.filename}" type="video/mp4">
               Il tuo browser non supporta il tag video.
             </video>
           </div>
