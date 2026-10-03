@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Meme - Phishy Bot</title>
+  <link rel="icon" href="assets/img/avatar-logo.png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="meme.css">
+</head>
+<body class="vapor">
+
+  <div class="vw-scene" aria-hidden="true"><i class="sun"></i><i class="floor"></i></div>
+
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <img src="assets/img/avatar-logo.png" alt="Phishy Avatar" class="logo-img">
+        Phishy <span>Bot</span>
+      </div>
+      <button class="mobile-menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="regole.html">Regole & Gruppi</a></li>
+        <li><a href="comandi.html">Comandi</a></li>
+        <li><a href="meme.html" class="active">Video Meme</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="vw-wrap" id="vw-top">
+    <nav class="vw-crumbs" aria-label="Percorso">
+      <a href="index.html">Home</a><span>Video Meme</span><span>Archivio Phishy</span>
+    </nav>
+
+    <section class="vw-head">
+      <p class="vw-kana">ビデオ・ミーム</p>
+      <h1 class="vw-h1">Video Meme</h1>
+      <div class="vw-by">
+        <img class="vw-ava sm" src="assets/img/avatar-logo.png" alt="" onerror="this.style.visibility='hidden'">
+        <div><b>Caricati da Phishy Bot</b><br><span id="vw-count">0 video</span> nell'archivio</div>
+        <button class="vw-btn" id="vw-share" type="button"><i class="fa-solid fa-share-nodes"></i> Condividi</button>
+      </div>
+    </section>
+
+    <div class="vw-tools">
+      <div class="vw-pager" id="vw-pager-top"></div>
+      <label class="vw-search"><i class="fa-solid fa-magnifying-glass"></i><input id="vw-q" type="search" placeholder="Cerca un video..." autocomplete="off"></label>
+      <button class="vw-btn" id="vw-sort" type="button"><i class="fa-solid fa-arrow-down-wide-short"></i> <span>Più recenti</span></button>
+    </div>
+
+    <div class="vw-layout">
+      <div id="vw-feed"></div>
+
+      <aside class="vw-side">
+        <section class="vw-widget"><h4>Statistiche archivio</h4><ul class="vw-list" id="vw-stats"></ul></section>
+        <section class="vw-widget"><h4>Ultimi caricati</h4><div class="vw-thumbs" id="vw-thumbs"></div></section>
+      </aside>
+    </div>
+
+    <div class="vw-pager" id="vw-pager-bot"></div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Phishy Bot <i class="fa-solid fa-fish"></i> - Tutti i diritti riservati.</p>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="meme.js"></script>
+</body>
+</html>
