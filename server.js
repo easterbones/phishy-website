@@ -10,15 +10,6 @@ const app = express();
 const mongoURI = process.env.MONGODB_URI;
 const SHOP_SECRET = process.env.SHOP_SECRET;
 
-// Gestione middleware CORS (abilitato prima di qualsiasi rotta API)
-app.use('/api', (req, res, next) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') return res.sendStatus(204);
-    next();
-});
-
 // Middleware per il parsing del body JSON
 app.use(express.json());
 
@@ -38,13 +29,18 @@ function connect() {
     return connPromise;
 }
 
+// CORS per l'API
+app.use('/api', (req, res, next) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+});
+
 // Helper per verificare il token inviato dal frontend
 function verifyToken(token) {
-    if (!SHOP_SECRET) {
-        console.error('[AUTH ERROR] SHOP_SECRET non è definita nelle variabili d\'ambiente del server!');
-        return null;
-    }
-    if (!token) return null;
+    if (!SHOP_SECRET || !token) return null;
     const parts = token.split('.');
     if (parts.length !== 2) return null;
     const [p, sig] = parts;
@@ -273,9 +269,69 @@ app.get('/api/profilo/:numero', async (req, res) => {
     }
 });
 
-// Servizio file statici e rotte HTML
+// Servizio file statici
+// ==================== ROTTE API MEME & COMMENTI ====================
+
+// Schema per salvare i commenti dei meme nel DB
+const CommentSchema = new mongoose.Schema({
+    videoId: { type: String, required: true },
+    author: { type: String, required: true },
+    text: { type: String, required: true },
+    date: { type: Date, default: Date.now }
+});
+const Comment = mongoose.models.Comment || mongoose.model('Comment', CommentSchema);
+
+// Configurazione dei video. 
+// Puoi modificare 'title' con il nome scelto da te e 'filename' con il nome reale del file in public/vid
+const videoMemesList = [
+    { id: 'meme-1', filename: 'offline_bot.mp4', title: 'Quando il bot va offline nel momento sbagliato 💀' },
+    { id: 'meme-2', filename: 'spam_gruppo.mp4', title: 'POV: Hai appena spammato nel gruppo' },
+    { id: 'meme-3', filename: 'admin_incazzato.mp4', title: 'L\'admin quando non rispetti le regole' }
+    // Aggiungi qui tutti i video che vuoi
+];
+
+// Invia la lista dei video al frontend
+app.get('/api/memes', (req, res) => {
+    res.json({ success: true, memes: videoMemesList });
+});
+
+// Ottieni i commenti di un video specifico dal database
+app.get('/api/memes/:id/comments', async (req, res) => {
+    try {
+        await connect();
+        // Cerca i commenti per videoId e ordinali dai più recenti ai più vecchi
+        const comments = await Comment.find({ videoId: req.params.id }).sort({ date: -1 }).lean();
+        res.json({ success: true, comments });
+    } catch (error) {
+        console.error('[API Memes GET]', error.message);
+        res.status(500).json({ success: false, message: 'Errore nel caricamento dei commenti.' });
+    }
+});
+
+// Salva un nuovo commento nel database
+app.post('/api/memes/:id/comments', async (req, res) => {
+    try {
+        const { author, text } = req.body;
+        if (!author || !text) {
+            return res.status(400).json({ success: false, message: 'Nome e commento sono obbligatori.' });
+        }
+        
+        await connect();
+        const newComment = new Comment({
+            videoId: req.params.id,
+            author: author,
+            text: text
+        });
+        await newComment.save();
+        
+        res.json({ success: true, comment: newComment });
+    } catch (error) {
+        console.error('[API Memes POST]', error.message);
+        res.status(500).json({ success: false, message: 'Errore durante il salvataggio del commento.' });
+    }
+});
+
 app.get('/profilo/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'profilo.html')));
-app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/profilo.html'));
 
