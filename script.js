@@ -3,9 +3,7 @@
 // ==========================================
 // Inserisci qui i video che hai nella cartella "public/vid".
 const videoMemesList = [
-    { filename: 'offline_bot.mp4', title: 'Quando il bot va offline nel momento sbagliato 💀' },
-    { filename: 'spam_gruppo.mp4', title: 'POV: Hai appena spammato nel gruppo' },
-    { filename: 'admin_incazzato.mp4', title: 'L\'admin quando non rispetti le regole' }
+    { filename: 'VID-20260910-WA0038.mp4', title: 'test video' },
     // Aggiungi qui altri video copiando la riga sopra
 ];
 
