@@ -1,6 +1,11 @@
 // Pagina Video Meme. Legge la lista `videoMemesList` da script.js (da caricare PRIMA di questo file).
 // Campi di ogni video: { filename: 'x.mp4', title: 'Titolo', date: '2026-10-03' }   <- date è opzionale
 (() => {
+    // menu mobile: se script.js non è raggiungibile, lo definiamo qui
+    if (typeof window.toggleMenu !== 'function') {
+        window.toggleMenu = () => { const n = document.getElementById('navLinks'); if (n) n.classList.toggle('show'); };
+    }
+
     const feed = document.getElementById('vw-feed');
     if (!feed) return;
 
