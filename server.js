@@ -270,65 +270,6 @@ app.get('/api/profilo/:numero', async (req, res) => {
 });
 
 // Servizio file statici
-// ==================== ROTTE API MEME & COMMENTI ====================
-
-// Schema per salvare i commenti dei meme nel DB
-const CommentSchema = new mongoose.Schema({
-    videoId: { type: String, required: true },
-    author: { type: String, required: true },
-    text: { type: String, required: true },
-    date: { type: Date, default: Date.now }
-});
-const Comment = mongoose.models.Comment || mongoose.model('Comment', CommentSchema);
-
-// Configurazione dei video. 
-// Puoi modificare 'title' con il nome scelto da te e 'filename' con il nome reale del file in public/vid
-const videoMemesList = [
-    { id: 'meme-1', filename: 'VID-20260910-WA0038.mp4', title: 'test video' },
-    // Aggiungi qui tutti i video che vuoi
-];
-
-// Invia la lista dei video al frontend
-app.get('/api/memes', (req, res) => {
-    res.json({ success: true, memes: videoMemesList });
-});
-
-// Ottieni i commenti di un video specifico dal database
-app.get('/api/memes/:id/comments', async (req, res) => {
-    try {
-        await connect();
-        // Cerca i commenti per videoId e ordinali dai più recenti ai più vecchi
-        const comments = await Comment.find({ videoId: req.params.id }).sort({ date: -1 }).lean();
-        res.json({ success: true, comments });
-    } catch (error) {
-        console.error('[API Memes GET]', error.message);
-        res.status(500).json({ success: false, message: 'Errore nel caricamento dei commenti.' });
-    }
-});
-
-// Salva un nuovo commento nel database
-app.post('/api/memes/:id/comments', async (req, res) => {
-    try {
-        const { author, text } = req.body;
-        if (!author || !text) {
-            return res.status(400).json({ success: false, message: 'Nome e commento sono obbligatori.' });
-        }
-        
-        await connect();
-        const newComment = new Comment({
-            videoId: req.params.id,
-            author: author,
-            text: text
-        });
-        await newComment.save();
-        
-        res.json({ success: true, comment: newComment });
-    } catch (error) {
-        console.error('[API Memes POST]', error.message);
-        res.status(500).json({ success: false, message: 'Errore durante il salvataggio del commento.' });
-    }
-});
-
 app.get('/profilo/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'profilo.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/profilo.html'));
