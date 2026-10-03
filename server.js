@@ -284,9 +284,7 @@ const Comment = mongoose.models.Comment || mongoose.model('Comment', CommentSche
 // Configurazione dei video. 
 // Puoi modificare 'title' con il nome scelto da te e 'filename' con il nome reale del file in public/vid
 const videoMemesList = [
-    { id: 'meme-1', filename: 'offline_bot.mp4', title: 'Quando il bot va offline nel momento sbagliato 💀' },
-    { id: 'meme-2', filename: 'spam_gruppo.mp4', title: 'POV: Hai appena spammato nel gruppo' },
-    { id: 'meme-3', filename: 'admin_incazzato.mp4', title: 'L\'admin quando non rispetti le regole' }
+    { id: 'meme-1', filename: 'VID-20260910-WA0038.mp4', title: 'test video' },
     // Aggiungi qui tutti i video che vuoi
 ];
 
