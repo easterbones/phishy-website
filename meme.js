@@ -12,7 +12,11 @@
     const PER_PAGE = 5;
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const src = (f) => 'vid/' + encodeURIComponent(f);
+    // Percorsi provati in ordine. La cartella "public" è la radice del sito, quindi di solito funziona '/vid/'.
+    // Se un percorso dà errore passa al successivo; quello che funziona viene ricordato per gli altri video.
+    const VID_BASES = ['/vid/', '/public/vid/', 'vid/', 'public/vid/'];
+    let good = 0;
+    const src = (f, i = good) => VID_BASES[i] + encodeURIComponent(f);
     const slug = (f) => 'v-' + String(f).replace(/\.[^.]+$/, '').replace(/[^\w-]+/g, '-');
     const fmtTime = (s) => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '--:--');
     const fmtDate = (d) => { const t = Date.parse(d); return isNaN(t) ? '' : new Date(t).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }); };
@@ -38,7 +42,7 @@
         <h3 class="vw-vtitle">${esc(v.title || v.filename)}</h3>
         <div class="vw-win">
           <div class="vw-bar"><span class="t">${esc(v.filename)}</span><i class="fa-solid fa-minus"></i><i class="fa-regular fa-square"></i><i class="fa-solid fa-xmark"></i></div>
-          <div class="vw-screen"><video controls playsinline preload="metadata" src="${src(v.filename)}"></video></div>
+          <div class="vw-screen"><video controls playsinline preload="metadata" data-f="${esc(v.filename)}" data-i="${good}" src="${src(v.filename)}"></video></div>
           <div class="vw-status"><span class="rec">REC</span><span data-dur2>--:--</span><span data-res2>--</span></div>
         </div>
         <footer class="vw-foot">
@@ -75,6 +79,24 @@
         p.querySelector('[data-dur]').textContent = p.querySelector('[data-dur2]').textContent = d;
         p.querySelector('[data-res]').textContent = p.querySelector('[data-res2]').textContent = r;
         p.classList.toggle('is-portrait', v.videoHeight > v.videoWidth);
+        good = Number(v.dataset.i || 0);
+        const dl = p.querySelector('a[download]'); if (dl) dl.href = v.currentSrc;
+    }, true);
+
+    // se il file non si carica, prova il percorso successivo; alla fine mostra quale file manca
+    document.addEventListener('error', (e) => {
+        const v = e.target;
+        if (!(v instanceof HTMLVideoElement) || !v.dataset.f) return;
+        const i = Number(v.dataset.i || 0) + 1;
+        if (i < VID_BASES.length) {
+            v.dataset.i = i;
+            v.src = src(v.dataset.f, i) + (v.dataset.t || '');
+            return;
+        }
+        const scr = v.closest('.vw-screen');
+        if (scr && !scr.querySelector('.vw-miss')) {
+            scr.insertAdjacentHTML('beforeend', `<div class="vw-miss"><b>Video non trovato</b><span>Controlla che il file esista in public/vid:</span><code>${esc(v.dataset.f)}</code></div>`);
+        } else v.style.visibility = 'hidden';
     }, true);
 
     function toast(t) {
@@ -118,7 +140,7 @@
 
     // anteprime "Ultimi caricati" (una volta sola)
     $('vw-thumbs').innerHTML = items.slice(-6).reverse().map((v) =>
-        `<a class="vw-th" href="#${v.id}" title="${esc(v.title || v.filename)}"><video muted preload="metadata" src="${src(v.filename)}#t=0.1"></video><span>#${v.n}</span></a>`
+        `<a class="vw-th" href="#${v.id}" title="${esc(v.title || v.filename)}"><video muted preload="metadata" data-f="${esc(v.filename)}" data-i="${good}" data-t="#t=0.1" src="${src(v.filename)}#t=0.1"></video><span>#${v.n}</span></a>`
     ).join('') || '<p class="vw-muted">Nessuna anteprima.</p>';
 
     render();
