@@ -322,7 +322,7 @@ function loadMemes() {
           <h3>${meme.title}</h3>
           <div class="video-wrapper">
             <video controls>
-              <source src="vid/${meme.filename}" type="video/mp4">
+              <source src="public/vid/${meme.filename}" type="video/mp4">
               Il tuo browser non supporta il tag video.
             </video>
           </div>
