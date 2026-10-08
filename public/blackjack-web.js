@@ -1,5 +1,5 @@
 // URL del server API (stesso dello shop)
-const API_BASE = 'https://phishy-website.onrender.com';
+const API_BASE = 'https://phishy-websites.onrender.com';
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('it-IT');
