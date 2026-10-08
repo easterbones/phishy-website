@@ -1,5 +1,5 @@
 // URL del server API (stesso dello shop)
-const API_BASE = 'https://phishy-websites.onrender.com';
+const API_BASE = 'https://phishy-website.onrender.com';
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('it-IT');
@@ -10,7 +10,7 @@ const TOKEN = new URLSearchParams(location.search).get('t') || '';
 const SUITS = { H: '♥', D: '♦', C: '♣', S: '♠' };
 const RED = new Set(['H', 'D']);
 
-const S = {s
+const S = {
   user: null,          // { limit, credito }
   stats: { wins: 0, losses: 0, pushes: 0 },
   game: null,          // stato partita corrente dal server
