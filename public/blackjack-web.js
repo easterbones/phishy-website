@@ -407,19 +407,19 @@ async function startGame() {
     renderWallet();
     renderStats();
     await animateInitialDeal(r.game);
-
-    // blackjack naturale → già finished
-    if (r.game.status === 'finished') {
-      renderGame(); // badge + replay, carte già a tavolo
-    } else {
-      renderGame(); // mostra Hit/Stand
-    }
   } catch (e) {
     toast(e.message, true);
-    renderAll();
+    clearHands();
   } finally {
     S.busy = false;
-    $('dealBtn').disabled = false;
+    S.animating = false;
+    const db = $('dealBtn');
+    if (db) db.disabled = false;
+    // IMPORTANT: render DOPO busy=false, altrimenti i bottoni restano nascosti
+    // animate:true → non ridisegnare le carte già animate
+    renderWallet();
+    renderStats();
+    renderGame({ animate: true });
   }
 }
 
@@ -442,13 +442,14 @@ async function doAction(action) {
     renderWallet();
     renderStats();
     await animateNewCards(prev, r.game);
-    renderGame(); // aggiorna bottoni / replay / badge
   } catch (e) {
     toast(e.message, true);
-    renderAll();
   } finally {
     S.busy = false;
-    renderGame();
+    S.animating = false;
+    renderWallet();
+    renderStats();
+    renderGame({ animate: true });
   }
 }
 
