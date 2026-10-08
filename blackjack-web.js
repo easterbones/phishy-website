@@ -1,5 +1,5 @@
 // URL del server API (stesso dello shop)
-const API_BASE = 'https://phishy-website.onrender.com';
+const API_BASE = 'https://phishy-websites.onrender.com';
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('it-IT');
@@ -9,6 +9,30 @@ const TOKEN = new URLSearchParams(location.search).get('t') || '';
 
 const SUITS = { H: '♥', D: '♦', C: '♣', S: '♠' };
 const RED = new Set(['H', 'D']);
+
+/* ── CuteCards.png sprite sheet ───────────────────────────────
+   Immagine: 1500 × 576 px
+   Griglia:  15 colonne × 4 righe
+   Carta:    100 × 144 px  (nessuno gap tra le celle)
+   Righe (top→bottom): Clubs, Diamonds, Spades, Hearts
+   Colonne (left→right): A 2 3 4 5 6 7 8 9 10 J Q K Joker Back
+─────────────────────────────────────────────────────────────── */
+const DECK_SRC = '/assets/img/CuteCards.png';
+const SHEET_COLS = 15;
+const SHEET_ROWS = 4;
+const SPRITE_CW = 100; // px nel foglio
+const SPRITE_CH = 144;
+// dimensione a schermo (mantiene aspect 100:144)
+const CARD_W = 80;
+const CARD_H = 115;
+
+const SUIT_ROW = { C: 0, D: 1, S: 2, H: 3 };
+const RANK_COL = {
+  A: 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6,
+  '8': 7, '9': 8, '10': 9, J: 10, Q: 11, K: 12
+};
+const BACK_COL = 14; // dorso a strisce
+const BACK_ROW = 2;  // riga spades (dorso nero)
 
 const S = {
   user: null,          // { limit, credito }
@@ -43,16 +67,37 @@ async function api(path, opt = {}) {
   return data;
 }
 
+function spriteStyle(col, row) {
+  // usa % così scala con width/height CSS (anche su mobile)
+  // posizione: (col / (cols-1)) * 100%  se background-size è in multipli esatti
+  // più affidabile: background-size = cols*100% × rows*100% della singola carta
+  const sizeX = SHEET_COLS * 100; // 1500%
+  const sizeY = SHEET_ROWS * 100; // 400%
+  const posX = SHEET_COLS === 1 ? 0 : (col / (SHEET_COLS - 1)) * 100;
+  const posY = SHEET_ROWS === 1 ? 0 : (row / (SHEET_ROWS - 1)) * 100;
+  return [
+    `background-image:url('${DECK_SRC}')`,
+    `background-size:${sizeX}% ${sizeY}%`,
+    `background-position:${posX}% ${posY}%`,
+    `background-repeat:no-repeat`
+  ].join(';');
+}
+
 function cardHtml(card, hidden = false) {
   if (hidden || card.hidden) {
-    return `<div class="playing-card back" aria-label="carta coperta"></div>`;
+    return `<div class="playing-card" style="${spriteStyle(BACK_COL, BACK_ROW)}" aria-label="carta coperta"></div>`;
   }
-  const suit = SUITS[card.s] || card.s;
-  const color = RED.has(card.s) ? 'red' : 'black';
-  return `<div class="playing-card ${color}" aria-label="${esc(card.r + suit)}">
-    <span class="rank">${esc(card.r)}</span>
-    <span class="suit">${suit}</span>
-  </div>`;
+  const col = RANK_COL[card.r];
+  const row = SUIT_ROW[card.s];
+  if (col === undefined || row === undefined) {
+    // fallback testo se rank/suit sconosciuti
+    const suit = SUITS[card.s] || card.s;
+    return `<div class="playing-card fallback" aria-label="${esc(card.r + suit)}">
+      <span class="rank">${esc(card.r)}</span><span class="suit">${suit}</span>
+    </div>`;
+  }
+  const label = esc((card.r || '') + (SUITS[card.s] || card.s || ''));
+  return `<div class="playing-card" style="${spriteStyle(col, row)}" aria-label="${label}"></div>`;
 }
 
 function handValue(cards) {
