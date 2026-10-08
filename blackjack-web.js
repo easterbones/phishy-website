@@ -39,6 +39,7 @@ const S = {
   stats: { wins: 0, losses: 0, pushes: 0 },
   game: null,          // stato partita corrente dal server
   busy: false,
+  animating: false,
   lastResult: null
 };
 
@@ -128,7 +129,55 @@ function renderStats() {
     `<div class="stat push"><b>${nf.format(st.pushes)}</b>Pareggi</div>`;
 }
 
-function renderGame() {
+/** Aggiunge una carta al container e la anima dopo `delay` ms */
+function appendCard(container, html, { who = 'dealer', delay = 0, flip = false } = {}) {
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  const el = wrap.firstElementChild;
+  if (!el) return null;
+  if (who === 'player') el.classList.add('deal-player');
+  if (flip) el.classList.add('flip');
+  container.appendChild(el);
+  requestAnimationFrame(() => {
+    setTimeout(() => el.classList.add('show'), delay);
+  });
+  return el;
+}
+
+function clearHands() {
+  $('dealerCards').innerHTML = '';
+  $('playerCards').innerHTML = '';
+  $('dealerScore').hidden = true;
+  $('playerScore').hidden = true;
+  // rimuovi badge esito
+  const badge = document.querySelector('.outcome-badge');
+  if (badge) badge.remove();
+}
+
+function setScore(el, val, show) {
+  if (!show) { el.hidden = true; return; }
+  el.hidden = false;
+  el.textContent = val;
+}
+
+function showOutcomeBadge(outcome) {
+  const label = $('dealerHand')?.querySelector('.hand-label');
+  if (!label) return;
+  const old = label.querySelector('.outcome-badge');
+  if (old) old.remove();
+  if (!outcome) return;
+  const map = { win: 'Vinto', loss: 'Perso', push: 'Pareggio' };
+  const b = document.createElement('span');
+  b.className = 'outcome-badge ' + outcome;
+  b.textContent = map[outcome] || outcome;
+  label.appendChild(b);
+}
+
+/**
+ * Render istantaneo (senza animazione) — usato al load e dopo animazioni.
+ * @param {{ animate?: boolean, revealDealer?: boolean }} opts
+ */
+function renderGame(opts = {}) {
   const g = S.game;
   const dealerCards = $('dealerCards');
   const playerCards = $('playerCards');
@@ -136,26 +185,14 @@ function renderGame() {
   const playerScore = $('playerScore');
   const betArea = $('betArea');
   const actionBar = $('actionBar');
-  const resultMsg = $('resultMsg');
+  const replayBar = $('replayBar');
 
-  if (!g || g.status === 'idle' || g.status === 'finished') {
-    // schermo puntata
-    dealerCards.innerHTML = '';
-    playerCards.innerHTML = '';
-    dealerScore.hidden = true;
-    playerScore.hidden = true;
+  // ── stato puntata / tavolo vuoto ──
+  if (!g || g.status === 'idle') {
+    clearHands();
     betArea.hidden = false;
     actionBar.hidden = true;
-
-    if (S.lastResult) {
-      resultMsg.hidden = false;
-      resultMsg.className = 'msg ' + (S.lastResult.outcome || 'info');
-      resultMsg.textContent = S.lastResult.message || '';
-    } else {
-      resultMsg.hidden = true;
-    }
-
-    // precompila puntata con ultima o default
+    replayBar.hidden = true;
     const maxBet = Math.max(10, S.user?.limit || 0);
     const inp = $('bet');
     inp.max = maxBet;
@@ -163,53 +200,155 @@ function renderGame() {
     return;
   }
 
-  // partita in corso o appena finita (prima del reset)
   betArea.hidden = true;
 
-  // carte dealer
-  const showDealer = g.status === 'finished' || g.status === 'dealer_turn';
-  dealerCards.innerHTML = (g.dealer || []).map((c, i) =>
-    cardHtml(c, !showDealer && i === 1)
-  ).join('');
+  const finished = g.status === 'finished';
+  const showDealer = finished || g.status === 'dealer_turn' || opts.revealDealer;
 
-  // carte player
-  playerCards.innerHTML = (g.player || []).map(c => cardHtml(c)).join('');
+  // se non stiamo animando, ridisegna tutto
+  if (!opts.animate) {
+    dealerCards.innerHTML = '';
+    playerCards.innerHTML = '';
+    (g.dealer || []).forEach((c, i) => {
+      const html = cardHtml(c, !showDealer && i === 1);
+      const el = appendCard(dealerCards, html, { who: 'dealer', delay: 0 });
+      if (el) el.classList.add('show');
+    });
+    (g.player || []).forEach((c) => {
+      const html = cardHtml(c);
+      const el = appendCard(playerCards, html, { who: 'player', delay: 0 });
+      if (el) el.classList.add('show');
+    });
+  }
 
-  // punteggi
   const pVal = g.playerValue ?? handValue(g.player || []);
-  playerScore.hidden = false;
-  playerScore.textContent = pVal;
+  setScore(playerScore, pVal, true);
 
   if (showDealer) {
-    const dVal = g.dealerValue ?? handValue(g.dealer || []);
-    dealerScore.hidden = false;
-    dealerScore.textContent = dVal;
+    const dVal = g.dealerValue ?? handValue((g.dealer || []).filter(c => !c.hidden));
+    // se tutte scoperte usa dealerValue del server
+    setScore(dealerScore, g.dealerValue ?? handValue(g.dealer || []), true);
   } else {
-    dealerScore.hidden = true;
+    // solo carta visibile del dealer
+    const visible = (g.dealer || []).filter((c, i) => i !== 1 && !c.hidden);
+    setScore(dealerScore, handValue(visible.length ? visible : [g.dealer[0]].filter(Boolean)), true);
   }
 
   // azioni
-  const canAct = g.status === 'player_turn' && !S.busy;
+  const canAct = g.status === 'player_turn' && !S.busy && !S.animating;
   actionBar.hidden = !canAct;
-  $('hitBtn').disabled = !canAct;
-  $('standBtn').disabled = !canAct;
-  $('doubleBtn').disabled = !canAct || !g.canDouble;
+  if ($('hitBtn')) {
+    $('hitBtn').disabled = !canAct;
+    $('standBtn').disabled = !canAct;
+    $('doubleBtn').disabled = !canAct || !g.canDouble;
+  }
 
-  // messaggio risultato
-  if (g.status === 'finished' && g.result) {
-    resultMsg.hidden = false;
-    resultMsg.className = 'msg ' + (g.result.outcome || 'info');
-    resultMsg.textContent = g.result.message || '';
-    S.lastResult = g.result;
+  // fine mano: tutte le carte scoperte + badge + rigioca (niente testo lungo)
+  if (finished) {
+    actionBar.hidden = true;
+    replayBar.hidden = false;
+    if (g.result) {
+      S.lastResult = g.result;
+      showOutcomeBadge(g.result.outcome);
+    }
   } else {
-    resultMsg.hidden = true;
+    replayBar.hidden = true;
+    showOutcomeBadge(null);
   }
 }
 
-function renderAll() {
+function renderAll(opts) {
   renderWallet();
   renderStats();
-  renderGame();
+  renderGame(opts);
+}
+
+/** Distribuisce le 4 carte iniziali una alla volta */
+async function animateInitialDeal(game) {
+  S.animating = true;
+  clearHands();
+  $('betArea').hidden = true;
+  $('actionBar').hidden = true;
+  $('replayBar').hidden = true;
+
+  const dealer = game.dealer || [];
+  const player = game.player || [];
+  const dEl = $('dealerCards');
+  const pEl = $('playerCards');
+  const step = 280;
+
+  // ordine classico: player, dealer, player, dealer(hole)
+  appendCard(pEl, cardHtml(player[0]), { who: 'player', delay: 30 });
+  await sleep(step);
+  appendCard(dEl, cardHtml(dealer[0]), { who: 'dealer', delay: 30 });
+  await sleep(step);
+  appendCard(pEl, cardHtml(player[1]), { who: 'player', delay: 30 });
+  await sleep(step);
+  // hole card coperta se partita ancora in corso
+  const holeHidden = game.status === 'player_turn';
+  appendCard(dEl, cardHtml(dealer[1], holeHidden), { who: 'dealer', delay: 30 });
+  await sleep(step + 80);
+
+  setScore($('playerScore'), game.playerValue ?? handValue(player), true);
+  if (holeHidden) {
+    setScore($('dealerScore'), handValue([dealer[0]]), true);
+  } else {
+    setScore($('dealerScore'), game.dealerValue ?? handValue(dealer), true);
+  }
+
+  S.animating = false;
+}
+
+/** Aggiunge carte nuove (hit / carte extra del dealer) con animazione */
+async function animateNewCards(prevGame, nextGame) {
+  S.animating = true;
+  const prevP = (prevGame?.player || []).length;
+  const prevD = (prevGame?.dealer || []).length;
+  const nextP = nextGame.player || [];
+  const nextD = nextGame.dealer || [];
+  const pEl = $('playerCards');
+  const dEl = $('dealerCards');
+  const step = 260;
+
+  // nuove carte player
+  for (let i = prevP; i < nextP.length; i++) {
+    appendCard(pEl, cardHtml(nextP[i]), { who: 'player', delay: 20 });
+    await sleep(step);
+  }
+
+  // se si passa a finished/dealer_turn: rivela hole card + carte dealer extra
+  const wasHidden = prevGame?.status === 'player_turn';
+  const nowOpen = nextGame.status === 'finished' || nextGame.status === 'dealer_turn';
+
+  if (wasHidden && nowOpen && nextD[1]) {
+    // sostituisci la seconda carta (dorso → faccia)
+    const kids = dEl.children;
+    if (kids[1]) {
+      const html = cardHtml(nextD[1], false);
+      const wrap = document.createElement('div');
+      wrap.innerHTML = html;
+      const neu = wrap.firstElementChild;
+      neu.classList.add('flip', 'show');
+      kids[1].replaceWith(neu);
+      await sleep(320);
+    }
+  }
+
+  for (let i = Math.max(prevD, 2); i < nextD.length; i++) {
+    appendCard(dEl, cardHtml(nextD[i]), { who: 'dealer', delay: 20 });
+    await sleep(step);
+  }
+
+  setScore($('playerScore'), nextGame.playerValue ?? handValue(nextP), true);
+  if (nowOpen || nextGame.status === 'finished') {
+    setScore($('dealerScore'), nextGame.dealerValue ?? handValue(nextD), true);
+  }
+
+  S.animating = false;
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 async function loadState() {
@@ -225,6 +364,8 @@ async function loadState() {
     if (r.game?.status === 'finished' && r.game.result) {
       S.lastResult = r.game.result;
     }
+    // se partita finita da poco: mostra tavolo completo (carte scoperte)
+    // se idle/null: tavolo vuoto + puntata
     renderAll();
   } catch (e) {
     $('table').innerHTML = `<div class="empty">${esc(e.message || 'Impossibile caricare il blackjack.')}<br><br><small>Apri di nuovo il blackjack tramite il comando sul bot WhatsApp.</small></div>`;
@@ -232,7 +373,7 @@ async function loadState() {
 }
 
 async function startGame() {
-  if (S.busy) return;
+  if (S.busy || S.animating) return;
   const bet = Math.floor(Number($('bet').value) || 0);
   if (bet < 10) {
     toast('Puntata minima: 10', true);
@@ -245,6 +386,7 @@ async function startGame() {
 
   S.busy = true;
   S.lastResult = null;
+  showOutcomeBadge(null);
   $('dealBtn').disabled = true;
   try {
     const r = await api('/api/blackjack/start', {
@@ -255,21 +397,32 @@ async function startGame() {
     S.user = r.user || S.user;
     S.stats = r.stats || S.stats;
     S.game = r.game;
-    if (r.game?.result) S.lastResult = r.game.result;
-    renderAll();
+
+    renderWallet();
+    renderStats();
+    await animateInitialDeal(r.game);
+
+    // blackjack naturale → già finished
+    if (r.game.status === 'finished') {
+      renderGame(); // badge + replay, carte già a tavolo
+    } else {
+      renderGame(); // mostra Hit/Stand
+    }
   } catch (e) {
     toast(e.message, true);
+    renderAll();
   } finally {
     S.busy = false;
     $('dealBtn').disabled = false;
-    renderAll();
   }
 }
 
 async function doAction(action) {
-  if (S.busy || !S.game || S.game.status !== 'player_turn') return;
+  if (S.busy || S.animating || !S.game || S.game.status !== 'player_turn') return;
   S.busy = true;
-  renderAll();
+  const prev = S.game;
+  // disabilita bottoni subito
+  renderGame();
   try {
     const r = await api('/api/blackjack/action', {
       method: 'POST',
@@ -279,14 +432,26 @@ async function doAction(action) {
     S.user = r.user || S.user;
     S.stats = r.stats || S.stats;
     S.game = r.game;
-    if (r.game?.result) S.lastResult = r.game.result;
-    renderAll();
+
+    renderWallet();
+    renderStats();
+    await animateNewCards(prev, r.game);
+    renderGame(); // aggiorna bottoni / replay / badge
   } catch (e) {
     toast(e.message, true);
+    renderAll();
   } finally {
     S.busy = false;
-    renderAll();
+    renderGame();
   }
+}
+
+function resetTable() {
+  S.game = null;
+  S.lastResult = null;
+  showOutcomeBadge(null);
+  clearHands();
+  renderAll();
 }
 
 // Eventi
@@ -294,6 +459,7 @@ $('dealBtn').addEventListener('click', startGame);
 $('hitBtn').addEventListener('click', () => doAction('hit'));
 $('standBtn').addEventListener('click', () => doAction('stand'));
 $('doubleBtn').addEventListener('click', () => doAction('double'));
+$('replayBtn').addEventListener('click', resetTable);
 
 $('bet').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') startGame();
@@ -302,8 +468,8 @@ $('bet').addEventListener('keydown', (e) => {
 loadState();
 // refresh periodico del saldo (quando non si sta giocando)
 setInterval(() => {
-  if (!S.busy && document.visibilityState === 'visible' && TOKEN) {
-    if (!S.game || S.game.status === 'idle' || S.game.status === 'finished') {
+  if (!S.busy && !S.animating && document.visibilityState === 'visible' && TOKEN) {
+    if (!S.game || S.game.status === 'idle') {
       loadState();
     }
   }
