@@ -37,11 +37,17 @@
     </div>
 
     <script>
-        const userId = "easterbone"; // ID utente di test o dinamico
+        // Estrae il numero di telefono dall'URL (es. /casa/39333...) oppure richiede prompt se testato in locale
+        const pathParts = window.location.pathname.split('/');
+        let numero = pathParts[pathParts.length - 1];
+        if (!numero || numero === 'casa.html' || numero === 'casa') {
+            numero = prompt("Inserisci il tuo numero di telefono (es. 393331234567):") || "390000000000";
+        }
+        numero = numero.replace(/[^0-9]/g, '');
+
         let scene, camera, renderer, controls;
         const placedObjects = [];
         const boundingBoxes = [];
-        let selectedObject = null;
         let roomBounds;
 
         const assetPaths = {
@@ -74,14 +80,13 @@
             dirLight.position.set(10, 20, 10);
             scene.add(dirLight);
 
-            // Pavimento della stanza (es. Monolocale 10x10)
+            // Pavimento della stanza (Monolocale 10x10)
             const floorGeo = new THREE.PlaneGeometry(10, 10);
             const floorMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
             scene.add(floor);
 
-            // Limiti fisici della stanza per il controllo grezzo dei confini
             roomBounds = { minX: -4.5, maxX: 4.5, minZ: -4.5, maxZ: 4.5 };
 
             document.getElementById('spawnBtn').addEventListener('click', () => {
@@ -105,10 +110,8 @@
                 obj.position.set(x, 0, z);
                 obj.rotation.y = rotY;
 
-                // Calcolo rapido della Box di collisione grezza
                 const box = new THREE.Box3().setFromObject(obj);
                 
-                // Controllo collisione rapida all'inserimento
                 if (checkCollision(box)) {
                     alert("Spazio occupato o fuori dai confini!");
                     return;
@@ -139,7 +142,6 @@
         }
 
         function checkCollision(newBox) {
-            // Controllo confini stanza
             const boxMin = newBox.min;
             const boxMax = newBox.max;
             if (boxMin.x < roomBounds.minX || boxMax.x > roomBounds.maxX ||
@@ -147,7 +149,6 @@
                 return true;
             }
 
-            // Controllo sovrapposizione con altri oggetti esistenti
             for (let i = 0; i < boundingBoxes.length; i++) {
                 if (newBox.intersectsBox(boundingBoxes[i])) {
                     return true;
@@ -158,9 +159,9 @@
 
         async function loadUserHouse() {
             try {
-                const res = await fetch(`/api/house/${userId}`);
+                const res = await fetch(`/api/house/${numero}`);
                 const data = await res.json();
-                if (data.success && data.house.furniture) {
+                if (data.success && data.house && data.house.furniture) {
                     data.house.furniture.forEach(item => {
                         spawnItem(item.modelName, item.x, item.z, item.rotationY, item.id);
                     });
@@ -184,13 +185,13 @@
                 const res = await fetch('/api/house/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId, houseType: 'monolocale', furniture: furnitureData })
+                    body: JSON.stringify({ numero, houseType: 'monolocale', furniture: furnitureData })
                 });
                 const data = await res.json();
                 if (data.success) {
                     alert("Casa salvata con successo nel database!");
                 } else {
-                    alert("Errore durante il salvataggio.");
+                    alert("Errore durante il salvataggio: " + (data.message || ''));
                 }
             } catch (err) {
                 console.error("Errore di rete:", err);
