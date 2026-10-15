@@ -59,7 +59,7 @@ function verifyToken(token) {
     }
 }
 
-// Middleware di autenticazione per le rotte dello shop / blackjack
+// Middleware di autenticazione per le rotte dello shop / blackjack / casa
 function authShop(req, res, next) {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
@@ -235,14 +235,12 @@ app.get('/api/blackjack/state', authShop, async (req, res) => {
         const userDoc = await getShopUser(db, req.userJid);
         let game = await getActiveGame(db, req.userJid);
 
-        // se non c'è partita attiva, prova a recuperare l'ultima finita (per mostrare il risultato)
         if (!game) {
             const col = db.collection('blackjackgames');
             game = await col.findOne(
                 { jid: req.userJid, status: 'finished' },
                 { sort: { updatedAt: -1 } }
             );
-            // non ripresentare risultati vecchi di più di 2 minuti
             if (game && game.updatedAt && Date.now() - new Date(game.updatedAt).getTime() > 120000) {
                 game = null;
             }
@@ -278,7 +276,6 @@ app.post('/api/blackjack/start', authShop, async (req, res) => {
         await connect();
         const db = mongoose.connection.db;
 
-        // blocca se c'è già una partita attiva
         const existing = await getActiveGame(db, req.userJid);
         if (existing) {
             return res.status(400).json({
@@ -292,7 +289,6 @@ app.post('/api/blackjack/start', authShop, async (req, res) => {
             return res.status(400).json({ success: false, message: 'Saldo insufficiente.' });
         }
 
-        // scala la puntata subito
         userDoc.limit -= bet;
 
         const deck = newDeck();
@@ -312,7 +308,6 @@ app.post('/api/blackjack/start', authShop, async (req, res) => {
             updatedAt: new Date()
         };
 
-        // blackjack naturale?
         const pBJ = isBlackjack(player);
         const dBJ = isBlackjack(dealer);
 
@@ -369,7 +364,6 @@ app.post('/api/blackjack/action', authShop, async (req, res) => {
             game.bet *= 2;
             game.doubled = true;
             game.player.push(game.deck.pop());
-            // dopo double si sta sempre
             if (handValue(game.player) > 21) {
                 game = settle(game, userDoc);
             } else {
@@ -381,7 +375,6 @@ app.post('/api/blackjack/action', authShop, async (req, res) => {
             if (handValue(game.player) > 21) {
                 game = settle(game, userDoc);
             }
-            // altrimenti resta player_turn
         } else if (action === 'stand') {
             game = dealerPlay(game);
             game = settle(game, userDoc);
@@ -515,6 +508,58 @@ app.get('/api/shop/order/:id', authShop, async (req, res) => {
     }
 });
 
+// ==================== ROTTE API CASA 3D ====================
+
+app.get('/api/house/state', authShop, async (req, res) => {
+    try {
+        await connect();
+        const db = mongoose.connection.db;
+        const userDoc = await getShopUser(db, req.userJid);
+
+        res.set('Cache-Control', 'no-store');
+        res.json({
+            success: true,
+            house: userDoc.casa || { houseType: 'monolocale', furniture: [] }
+        });
+    } catch (error) {
+        console.error('[API house state]', error.message);
+        res.status(500).json({ success: false, message: 'Errore di comunicazione col database.' });
+    }
+});
+
+app.post('/api/house/save', authShop, async (req, res) => {
+    try {
+        const { houseType, furniture } = req.body || {};
+        if (!houseType || !Array.isArray(furniture)) {
+            return res.status(400).json({ success: false, message: 'Dati della casa non validi.' });
+        }
+
+        await connect();
+        const db = mongoose.connection.db;
+        const userDoc = await getShopUser(db, req.userJid);
+
+        userDoc.casa = {
+            houseType: String(houseType),
+            furniture: furniture.map(item => ({
+                id: String(item.id || ('item_' + Math.random())),
+                modelName: String(item.modelName || 'Chair'),
+                x: Number(item.x) || 0,
+                y: Number(item.y) || 0,
+                z: Number(item.z) || 0,
+                rotationY: Number(item.rotationY) || 0
+            }))
+        };
+
+        await saveShopUser(db, userDoc);
+
+        res.set('Cache-Control', 'no-store');
+        res.json({ success: true, message: 'Casa salvata con successo!', house: userDoc.casa });
+    } catch (error) {
+        console.error('[API house save]', error.message);
+        res.status(500).json({ success: false, message: 'Errore durante il salvataggio della casa.' });
+    }
+});
+
 // ==================== ROTTE API PROFILO ====================
 
 app.get('/api/profilo/:numero', async (req, res) => {
@@ -603,6 +648,7 @@ app.get('/api/profilo/:numero', async (req, res) => {
 app.get('/profilo/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'profilo.html')));
 app.get('/blackjack', (req, res) => res.sendFile(path.join(__dirname, 'public', 'blackjack.html')));
 app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
+app.get('/casa', (req, res) => res.sendFile(path.join(__dirname, 'public', 'casa.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.redirect('/profilo.html'));
 
