@@ -22,6 +22,8 @@
         input[type="color"] { height: 35px; padding: 2px; background: #2f3542; }
         .view-btn { background: #2ed573; }
         .view-btn:hover { background: #26af5f; }
+        .center-btn { background: #1e90ff; }
+        .center-btn:hover { background: #3742fa; }
         #instructions {
             position: absolute; bottom: 10px; left: 10px; z-index: 10;
             background: rgba(0,0,0,0.7); padding: 10px; border-radius: 6px; font-size: 13px; pointer-events: none;
@@ -47,6 +49,7 @@
         <label>Colore Muri:</label>
         <input type="color" id="wallColorPicker" value="#ffffff">
         <hr style="border:0; border-top:1px solid #444; margin:8px 0;">
+        <button id="centerBtn" class="center-btn">Ricentra Telecamera</button>
         <button id="topViewBtn" class="view-btn">Vista dall'Alto</button>
         <button id="view3dBtn" class="view-btn">Vista 3D</button>
         <hr style="border:0; border-top:1px solid #444; margin:8px 0;">
@@ -54,7 +57,7 @@
     </div>
 
     <div id="instructions">
-        💡 <b>Comandi:</b> Trascina un oggetto per muoverlo. Usa il color picker per cambiare il colore dei muri.
+        💡 <b>Comandi:</b> Trascina con il tasto sinistro per spostarti sugli assi. Usa il tasto destro (o 2 dita) per ruotare. Trascina i mobili per posizionarli.
     </div>
 
     <script>
@@ -104,12 +107,23 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            // OrbitControls per la telecamera
+            // OrbitControls configurati per spostamento libero con tasto sinistro e rotazione con tasto destro
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.enablePan = true;
             controls.enableRotate = true;
             controls.enableZoom = true;
+
+            // Rimappatura controlli: Sinistro = Pan (Spostamento), Destro = Rotate (Rotazione)
+            controls.mouseButtons = {
+                LEFT: THREE.MOUSE.PAN,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.ROTATE
+            };
+            controls.touches = {
+                ONE: THREE.TOUCH.PAN,
+                TWO: THREE.TOUCH.DOLLY_ROTATE
+            };
 
             // Luci
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -118,7 +132,7 @@
             dirLight.position.set(10, 20, 10);
             scene.add(dirLight);
 
-            // Caricamento Texture Pavimento corretto da public/furniture/pavimento.png
+            // Caricamento Texture Pavimento da public/furniture/pavimento.png
             const floorGeo = new THREE.PlaneGeometry(10, 10);
             const textureLoader = new THREE.TextureLoader();
             
@@ -141,13 +155,11 @@
             // Creazione dei Due Muri ad Angolo (Posteriore e Sinistro)
             wallMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
 
-            // Muro Posteriore (lungo Z = -5)
             const backWallGeo = new THREE.BoxGeometry(10, 3, 0.2);
             const backWall = new THREE.Mesh(backWallGeo, wallMaterial);
             backWall.position.set(0, 1.5, -5.1);
             scene.add(backWall);
 
-            // Muro Sinistro (lungo X = -5)
             const leftWallGeo = new THREE.BoxGeometry(0.2, 3, 10);
             const leftWall = new THREE.Mesh(leftWallGeo, wallMaterial);
             leftWall.position.set(-5.1, 1.5, 0);
@@ -162,21 +174,27 @@
                 }
             });
 
-            // Eventi di puntamento per il trascinamento diretto (Mouse e Touch)
+            // Eventi di puntamento per il trascinamento diretto degli oggetti
             window.addEventListener('pointerdown', onPointerDown);
             window.addEventListener('pointermove', onPointerMove);
             window.addEventListener('pointerup', onPointerUp);
 
             // Pulsanti UI per la gestione della telecamera
-            document.getElementById('topViewBtn').addEventListener('click', () => {
-                camera.position.set(0, 15, 0.001);
+            document.getElementById('centerBtn').addEventListener('click', () => {
                 controls.target.set(0, 0, 0);
+                camera.position.set(0, 10, 12);
+                controls.update();
+            });
+
+            document.getElementById('topViewBtn').addEventListener('click', () => {
+                controls.target.set(0, 0, 0);
+                camera.position.set(0, 15, 0.001);
                 controls.update();
             });
 
             document.getElementById('view3dBtn').addEventListener('click', () => {
-                camera.position.set(0, 10, 12);
                 controls.target.set(0, 0, 0);
+                camera.position.set(0, 10, 12);
                 controls.update();
             });
 
@@ -269,7 +287,7 @@
         }
 
         function onPointerDown(event) {
-            if (event.clientX < 260 && event.clientY < 420) return;
+            if (event.clientX < 260 && event.clientY < 480) return;
 
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -286,7 +304,7 @@
                 }
                 selectedObject = clickedRoot;
                 isDragging = true;
-                controls.enabled = false;
+                controls.enabled = false; // Disabilita temporaneamente la camera per trascinare l'oggetto
 
                 const activeItem = placedObjects.find(i => i.mesh === selectedObject);
                 if (activeItem) {
@@ -321,7 +339,7 @@
         function onPointerUp(event) {
             if (!isDragging) return;
             isDragging = false;
-            controls.enabled = true;
+            controls.enabled = true; // Riabilita la telecamera
 
             if (selectedObject) {
                 const activeItem = placedObjects.find(i => i.mesh === selectedObject);
