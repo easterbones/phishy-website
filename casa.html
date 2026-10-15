@@ -1,501 +1,455 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phishy Home - Arreda la tua Casa</title>
-    <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; background: #111; color: #fff; touch-action: none; }
-        #ui {
-            position: absolute; top: 10px; left: 10px; z-index: 10;
-            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            max-width: 220px;
-        }
-        button, select, input[type="color"] {
-            background: #ff4757; color: white; border: none; padding: 8px 12px;
-            margin: 4px 0; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;
-            box-sizing: border-box;
-        }
-        button:hover { background: #ff6b81; }
-        select { background: #2f3542; }
-        input[type="color"] { height: 35px; padding: 2px; background: #2f3542; }
-        .view-btn { background: #2ed573; }
-        .view-btn:hover { background: #26af5f; }
-        .center-btn { background: #1e90ff; }
-        .center-btn:hover { background: #3742fa; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#17141f">
+<title>Phishy Home - Arreda la tua Casa</title>
+<style>
+:root{--bg:#17141f;--panel:#221d2f;--raise:#2d2740;--line:#3a3350;--tx:#f4f1fa;--mut:#a9a1bd;--acc:#ff4757;--ok:#2ed573;--dock:84px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font:500 15px/1.3 ui-rounded,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{display:block;width:100%;height:100%}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:2px}
+[hidden]{display:none!important}
 
-        /* Menu contestuale sopra l'oggetto */
-        #objectMenu {
-            display: none;
-            position: absolute;
-            z-index: 20;
-            background: rgba(0, 0, 0, 0.95);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ff4757;
-            transform: translate(-50%, -110%);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
-            min-width: 140px;
-            text-align: center;
-        }
-        #objectMenu button {
-            font-size: 12px;
-            padding: 6px 10px;
-            margin: 3px 0;
-        }
+#top{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 10px) 14px 14px;background:linear-gradient(var(--bg),transparent);pointer-events:none}
+#top>*{pointer-events:auto}
+h1{font-size:18px;margin:0}
+#saveBtn{position:relative;height:44px;padding:0 20px;border-radius:12px;background:var(--acc);font-weight:700}
+#saveBtn:disabled{opacity:.6}
+#dirty{position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:#ffd32a;border:2px solid var(--bg)}
 
-        #instructions {
-            position: absolute; bottom: 10px; left: 10px; z-index: 10;
-            background: rgba(0,0,0,0.7); padding: 10px; border-radius: 6px; font-size: 13px; pointer-events: none;
-        }
-    </style>
-    <!-- Import Three.js e controlli via CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+#hint{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 66px);transform:translateX(-50%);z-index:4;background:rgba(34,29,47,.92);border:1px solid var(--line);padding:8px 14px;border-radius:20px;font-size:13px;color:var(--mut);white-space:nowrap;pointer-events:none;transition:opacity .4s}
+#hint.off{opacity:0}
+#loading{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;background:var(--panel);padding:10px 18px;border-radius:20px;pointer-events:none}
+
+#side{position:fixed;right:12px;bottom:calc(var(--dock) + env(safe-area-inset-bottom) + 28px);z-index:5;display:flex;flex-direction:column;gap:10px}
+.fab{width:58px;height:58px;border-radius:16px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--mut);gap:1px}
+.fab b{font-size:20px;line-height:1;color:var(--tx)}
+
+#dock,#selbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line)}
+#selbar{display:none;flex-wrap:wrap}
+body.sel #dock{display:none}
+body.sel #selbar{display:flex}
+#selName{flex:0 0 100%;font-size:13px;color:var(--mut)}
+.big{flex:1;min-height:60px;border-radius:14px;background:var(--raise);font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.big span{font-size:20px;line-height:1}
+.big.main{background:var(--acc)}
+.big.ok{background:var(--ok);color:#06210f}
+.big.warn{color:#ff8a95}
+
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--panel);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .22s ease;max-height:65dvh;overflow:auto}
+#sheet[data-open]{transform:none}
+#sheet [data-p]{display:none}
+#sheet[data-open=add] #addP,#sheet[data-open=wall] #wallP{display:block}
+#scrim{position:fixed;inset:0;z-index:7;background:rgba(0,0,0,.45);display:none}
+#sheet[data-open]+#scrim{display:block}
+h2{font-size:16px;margin:0 0 12px}
+.grid{display:grid;gap:10px}
+#cards{grid-template-columns:repeat(3,1fr)}
+.card{min-height:100px;border-radius:16px;background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700}
+.card span{font-size:34px;line-height:1}
+#swatches{grid-template-columns:repeat(4,1fr)}
+.sw{height:54px;border-radius:14px;border:3px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+.sw.on{border-color:#fff}
+.custom{display:flex;align-items:center;justify-content:space-between;margin-top:14px;color:var(--mut)}
+.custom input{width:84px;height:44px;border:0;border-radius:12px;background:var(--raise);padding:3px}
+
+#toast{position:fixed;left:12px;right:84px;bottom:calc(var(--dock) + env(safe-area-inset-bottom) + 24px);z-index:9;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;color:#17141f;padding:12px 14px;border-radius:14px;font-weight:600;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}
+#toast.on{opacity:1;transform:none;pointer-events:auto}
+#toast button{background:none;color:#d6283a;font-weight:800;padding:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-    <div id="ui">
-        <h2>Arreda la tua Casa</h2>
-        <label>Seleziona Oggetto:</label><br>
-        <select id="itemSelect">
-            <option value="Chair">Sedia</option>
-            <option value="Table">Tavolo</option>
-            <option value="Bed">Letto</option>
-        </select>
-        <button id="spawnBtn">Aggiungi Oggetto</button>
-        <hr style="border:0; border-top:1px solid #444; margin:8px 0;">
-        <label>Colore Muri:</label>
-        <input type="color" id="wallColorPicker" value="#ffffff">
-        <hr style="border:0; border-top:1px solid #444; margin:8px 0;">
-        <button id="centerBtn" class="center-btn">Ricentra Telecamera</button>
-        <button id="topViewBtn" class="view-btn">Vista dall'Alto</button>
-        <button id="view3dBtn" class="view-btn">Vista 3D</button>
-        <hr style="border:0; border-top:1px solid #444; margin:8px 0;">
-        <button id="saveBtn">Salva Casa</button>
-    </div>
+<header id="top">
+  <h1>La mia casa</h1>
+  <button id="saveBtn">Salva<i id="dirty" hidden></i></button>
+</header>
+<div id="hint">Trascina un mobile per spostarlo · Pizzica per lo zoom</div>
+<div id="loading" hidden>Caricamento…</div>
 
-    <!-- Menu contestuale che appare sull'oggetto -->
-    <div id="objectMenu">
-        <div style="font-size:11px; margin-bottom:4px; font-weight:bold; color:#ff4757;">OPZIONI OGGETTO</div>
-        <button id="menuRotateBtn">🔄 Ruota 90°</button>
-        <button id="menuMoveBtn">🖐️ Sposta</button>
-        <button id="menuCloseBtn" style="background:#444; margin-top:6px;">✕ Chiudi</button>
-    </div>
+<div id="side">
+  <button class="fab" id="viewBtn" aria-label="Cambia vista"><b id="viewIcon">⬇</b><span id="viewLabel">Dall'alto</span></button>
+  <button class="fab" id="centerBtn" aria-label="Ricentra telecamera"><b>⌖</b><span>Ricentra</span></button>
+</div>
 
-    <div id="instructions">
-        💡 <b>Comandi:</b> Clicca su un oggetto per gestirlo. Trascina con il tasto sinistro per spostarti nella stanza.
-    </div>
+<div id="toast" role="status"></div>
 
-    <script>
-        const API_BASE_URL = "https://phishy-websites.onrender.com";
+<nav id="dock">
+  <button class="big main" id="openAdd"><span>＋</span>Aggiungi mobile</button>
+  <button class="big" id="openWall"><span>🎨</span>Colore muri</button>
+</nav>
+<nav id="selbar">
+  <div id="selName"></div>
+  <button class="big" id="rotBtn"><span>↻</span>Ruota</button>
+  <button class="big warn" id="delBtn"><span>🗑</span>Elimina</button>
+  <button class="big ok" id="doneBtn"><span>✓</span>Fine</button>
+</nav>
 
-        const urlParams = new URLSearchParams(window.location.search);
-        let numero = urlParams.get('numero') || urlParams.get('phone');
-        if (!numero) {
-            const rawSearch = window.location.search.replace('?', '');
-            numero = rawSearch.replace(/[^0-9]/g, '');
-        }
-        if (!numero) {
-            numero = prompt("Inserisci il tuo numero di telefono (es. 393331234567):") || "390000000000";
-        }
-        numero = numero.replace(/[^0-9]/g, '');
+<section id="sheet" aria-live="polite">
+  <div data-p id="addP"><h2>Cosa vuoi aggiungere?</h2><div class="grid" id="cards"></div></div>
+  <div data-p id="wallP"><h2>Colore dei muri</h2><div class="grid" id="swatches"></div>
+    <label class="custom">Altro colore<input type="color" id="wallPick" value="#ffffff"></label></div>
+</section>
+<div id="scrim"></div>
 
-        let scene, camera, renderer, controls;
-        const placedObjects = [];
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        let roomBounds;
-        let wallMaterial;
-        
-        let selectedObject = null;
-        let isDragging = false;
-        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-        let lastValidPosition = new THREE.Vector3();
-        let lastValidRotation = 0;
+<script>
+const API_BASE_URL = "https://phishy-websites.onrender.com";
+const $ = id => document.getElementById(id);
 
-        const assetPaths = {
-            "Chair": "public/furniture/Chair_17.glb",
-            "Table": "public/furniture/Work_Table_06.glb",
-            "Bed": "public/furniture/Bed_02.glb"
-        };
+const urlParams = new URLSearchParams(window.location.search);
+let numero = urlParams.get('numero') || urlParams.get('phone');
+if (!numero) numero = window.location.search.replace('?', '').replace(/[^0-9]/g, '');
+if (!numero) numero = prompt("Inserisci il tuo numero di telefono (es. 393331234567):") || "390000000000";
+numero = numero.replace(/[^0-9]/g, '');
 
-        init();
-        loadUserHouse();
+const assetPaths = {
+  Chair: "public/furniture/Chair_17.glb",
+  Table: "public/furniture/Work_Table_06.glb",
+  Bed: "public/furniture/Bed_02.glb"
+};
+const NAMES = { Chair: 'Sedia', Table: 'Tavolo', Bed: 'Letto' };
+const ICONS = { Chair: '🪑', Table: '🍽️', Bed: '🛏️' };
+const WALLS = ['#ffffff', '#f3e9dc', '#cfe3f0', '#d9ead3', '#f4cccc', '#e6d5f0', '#3d4a5c', '#2b2b2b'];
+const BOUNDS = { minX: -4.8, maxX: 4.8, minZ: -4.8, maxZ: 4.8 };
 
-        function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x202020);
+let scene, camera, renderer, controls, wallMaterial, helper = null;
+let topMode = false, dirty = false, pending = 0, selected = null, drag = null, tap = null;
+const placed = [];
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 10, 12);
+/* ---------- UI helpers ---------- */
+function setDirty(v) { dirty = v; $('dirty').hidden = !v; }
+function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+function toast(msg, act, fn) {
+  const t = $('toast');
+  t.textContent = msg;
+  if (act) {
+    const b = document.createElement('button');
+    b.textContent = act;
+    b.onclick = () => { fn(); t.classList.remove('on'); };
+    t.append(b);
+  }
+  t.classList.add('on');
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => t.classList.remove('on'), act ? 5000 : 2400);
+}
 
-            // OrbitControls configurati per spostamento libero
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.enablePan = true;
-            controls.enableRotate = true;
-            controls.enableZoom = true;
+function openSheet(which) { select(null); $('sheet').dataset.open = which; }
+function closeSheet() { delete $('sheet').dataset.open; }
 
-            controls.mouseButtons = {
-                LEFT: THREE.MOUSE.PAN,
-                MIDDLE: THREE.MOUSE.DOLLY,
-                RIGHT: THREE.MOUSE.ROTATE
-            };
-            controls.touches = {
-                ONE: THREE.TOUCH.PAN,
-                TWO: THREE.TOUCH.DOLLY_ROTATE
-            };
+function select(item) {
+  selected = item;
+  if (helper) { scene.remove(helper); helper = null; }
+  if (item) {
+    helper = new THREE.BoxHelper(item.mesh, 0x2ed573);
+    scene.add(helper);
+    $('selName').textContent = NAMES[item.modelName] || 'Mobile';
+    closeSheet();
+  }
+  document.body.classList.toggle('sel', !!item);
+}
 
-            // Luci
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-            scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-            dirLight.position.set(10, 20, 10);
-            scene.add(dirLight);
+function setWall(c, fromUser) {
+  wallMaterial.color.set(c);
+  $('wallPick').value = c;
+  document.querySelectorAll('.sw').forEach(s => s.classList.toggle('on', s.dataset.c === c));
+  if (fromUser) {
+    setDirty(true);
+    try { localStorage.setItem('wall_' + numero, c); } catch (e) {}
+  }
+}
 
-            // Caricamento Texture Pavimento
-            const floorGeo = new THREE.PlaneGeometry(10, 10);
-            const textureLoader = new THREE.TextureLoader();
-            
-            const floorTexture = textureLoader.load('public/furniture/pavimento.png', (texture) => {
-                texture.wrapS = THREE.RepeatWrapping;
-                texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(4, 4);
-            });
+/* ---------- Camera ---------- */
+function setView(top) {
+  topMode = top;
+  const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const hw = top ? 5.6 : 7.2, hh = top ? 5.6 : 4.6;
+  const d = Math.max(hw / (t * camera.aspect), hh / t) + (top ? 0 : 2);
+  controls.target.set(0, 0, 0);
+  if (top) camera.position.set(0, d, 0.001);
+  else camera.position.copy(new THREE.Vector3(0.22, 0.72, 0.66).normalize().multiplyScalar(d));
+  controls.enableRotate = !top;
+  controls.touches.ONE = top ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
+  controls.mouseButtons.LEFT = top ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+  controls.update();
+  $('viewIcon').textContent = top ? '⬆' : '⬇';
+  $('viewLabel').textContent = top ? '3D' : "Dall'alto";
+}
 
-            const floorMat = new THREE.MeshStandardMaterial({ 
-                map: floorTexture, 
-                roughness: 0.8 
-            });
+/* ---------- Scene ---------- */
+function init() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1b1826);
+  camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 1000);
 
-            const floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.name = "floor";
-            floor.rotation.x = -Math.PI / 2;
-            scene.add(floor);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  document.body.prepend(renderer.domElement);
 
-            // Creazione Muri
-            wallMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.minDistance = 3;
+  controls.maxDistance = 45;
+  controls.maxPolarAngle = Math.PI / 2.05;
+  controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+  controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+  controls.addEventListener('change', () => {
+    const t = controls.target;
+    const cx = Math.max(-6, Math.min(6, t.x)), cz = Math.max(-6, Math.min(6, t.z));
+    if (cx !== t.x || cz !== t.z) {
+      camera.position.x += cx - t.x; camera.position.z += cz - t.z;
+      t.x = cx; t.z = cz;
+    }
+  });
 
-            const backWallGeo = new THREE.BoxGeometry(10, 3, 0.2);
-            const backWall = new THREE.Mesh(backWallGeo, wallMaterial);
-            backWall.position.set(0, 1.5, -5.1);
-            scene.add(backWall);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+  dir.position.set(10, 20, 10);
+  scene.add(dir);
 
-            const leftWallGeo = new THREE.BoxGeometry(0.2, 3, 10);
-            const leftWall = new THREE.Mesh(leftWallGeo, wallMaterial);
-            leftWall.position.set(-5.1, 1.5, 0);
-            scene.add(leftWall);
+  const floorTexture = new THREE.TextureLoader().load('public/furniture/pavimento.png', tx => {
+    tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+    tx.repeat.set(4, 4);
+  });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.8 }));
+  floor.rotation.x = -Math.PI / 2;
+  scene.add(floor);
 
-            roomBounds = { minX: -4.8, maxX: 4.8, minZ: -4.8, maxZ: 4.8 };
+  wallMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+  const back = new THREE.Mesh(new THREE.BoxGeometry(10, 3, 0.2), wallMaterial);
+  back.position.set(0, 1.5, -5.1);
+  const left = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3, 10), wallMaterial);
+  left.position.set(-5.1, 1.5, 0);
+  scene.add(back, left);
 
-            document.getElementById('wallColorPicker').addEventListener('input', (e) => {
-                if (wallMaterial) wallMaterial.color.set(e.target.value);
-            });
+  /* UI wiring */
+  WALLS.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'sw'; b.dataset.c = c; b.style.background = c; b.setAttribute('aria-label', 'Colore ' + c);
+    b.onclick = () => setWall(c, true);
+    $('swatches').append(b);
+  });
+  $('wallPick').addEventListener('input', e => setWall(e.target.value, true));
 
-            // Gestione dei pulsanti del menu contestuale
-            document.getElementById('menuRotateBtn').addEventListener('click', () => {
-                if (selectedObject) {
-                    lastValidPosition.copy(selectedObject.position);
-                    lastValidRotation = selectedObject.rotation.y;
-                    
-                    selectedObject.rotation.y += Math.PI / 2;
-                    
-                    const activeItem = placedObjects.find(i => i.mesh === selectedObject);
-                    if (activeItem) {
-                        clampToBounds(selectedObject, activeItem.box);
-                        if (checkObjectCollisions(activeItem)) {
-                            selectedObject.rotation.y = lastValidRotation;
-                            clampToBounds(selectedObject, activeItem.box);
-                            alert("⚠️ Rotazione non consentita: collisione con un altro oggetto!");
-                        }
-                    }
-                }
-            });
+  Object.keys(assetPaths).forEach(type => {
+    const b = document.createElement('button');
+    b.className = 'card';
+    b.innerHTML = `<span>${ICONS[type]}</span>${NAMES[type]}`;
+    b.onclick = () => { closeSheet(); spawnItem(type, 0, 0, 0, null, true); };
+    $('cards').append(b);
+  });
 
-            document.getElementById('menuMoveBtn').addEventListener('click', () => {
-                if (selectedObject) {
-                    hideObjectMenu();
-                    isDragging = true;
-                    controls.enabled = false;
-                    const activeItem = placedObjects.find(i => i.mesh === selectedObject);
-                    if (activeItem) {
-                        lastValidPosition.copy(selectedObject.position);
-                        lastValidRotation = selectedObject.rotation.y;
-                    }
-                }
-            });
+  $('openAdd').onclick = () => openSheet('add');
+  $('openWall').onclick = () => openSheet('wall');
+  $('scrim').onclick = closeSheet;
+  $('rotBtn').onclick = rotateSelected;
+  $('delBtn').onclick = removeSelected;
+  $('doneBtn').onclick = () => select(null);
+  $('viewBtn').onclick = () => setView(!topMode);
+  $('centerBtn').onclick = () => setView(topMode);
+  $('saveBtn').onclick = saveUserHouse;
 
-            document.getElementById('menuCloseBtn').addEventListener('click', () => {
-                hideObjectMenu();
-                selectedObject = null;
-            });
+  window.addEventListener('pointerdown', onDown, true);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    setView(topMode);
+  });
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
-            // Eventi puntamento
-            window.addEventListener('pointerdown', onPointerDown);
-            window.addEventListener('pointermove', onPointerMove);
-            window.addEventListener('pointerup', onPointerUp);
+  setView(false);
+  animate();
+}
 
-            // Pulsanti UI Telecamera
-            document.getElementById('centerBtn').addEventListener('click', () => {
-                controls.target.set(0, 0, 0);
-                camera.position.set(0, 10, 12);
-                controls.update();
-            });
+/* ---------- Furniture ---------- */
+function clamp(item) {
+  const o = item.mesh, b = item.box;
+  b.setFromObject(o);
+  const p = o.position;
+  p.x = Math.max(BOUNDS.minX + p.x - b.min.x, Math.min(BOUNDS.maxX - (b.max.x - p.x), p.x));
+  p.z = Math.max(BOUNDS.minZ + p.z - b.min.z, Math.min(BOUNDS.maxZ - (b.max.z - p.z), p.z));
+  p.y = 0;
+  b.setFromObject(o);
+}
 
-            document.getElementById('topViewBtn').addEventListener('click', () => {
-                controls.target.set(0, 0, 0);
-                camera.position.set(0, 15, 0.001);
-                controls.update();
-            });
+function collides(item) {
+  item.box.setFromObject(item.mesh);
+  return placed.some(o => o.mesh !== item.mesh && item.box.intersectsBox(o.box.setFromObject(o.mesh)));
+}
 
-            document.getElementById('view3dBtn').addEventListener('click', () => {
-                controls.target.set(0, 0, 0);
-                camera.position.set(0, 10, 12);
-                controls.update();
-            });
+function freeSpot(item) {
+  const pts = [];
+  for (let x = -4; x <= 4; x += 0.8) for (let z = -4; z <= 4; z += 0.8) pts.push([x, z]);
+  pts.sort((a, b) => a[0] ** 2 + a[1] ** 2 - (b[0] ** 2 + b[1] ** 2));
+  for (const [x, z] of pts) {
+    item.mesh.position.set(x, 0, z);
+    clamp(item);
+    if (!collides(item)) return true;
+  }
+  return false;
+}
 
-            document.getElementById('spawnBtn').addEventListener('click', () => {
-                const type = document.getElementById('itemSelect').value;
-                spawnItem(type, 0, 0, 0, null, true);
-            });
+function spawnItem(type, x, z, rotY = 0, id = null, auto = false) {
+  pending++; $('loading').hidden = false;
+  const done = () => { if (--pending <= 0) $('loading').hidden = true; };
+  new THREE.GLTFLoader().load(assetPaths[type] || assetPaths.Chair, gltf => {
+    const obj = gltf.scene;
+    obj.scale.set(1.5, 1.5, 1.5);
+    obj.position.set(x, 0, z);
+    obj.rotation.y = rotY;
+    const item = { id: id || 'item_' + Date.now() + Math.random().toString(36).slice(2, 6), modelName: type, mesh: obj, box: new THREE.Box3() };
+    clamp(item);
+    if (auto && collides(item) && !freeSpot(item)) { toast('La stanza è piena'); done(); return; }
+    scene.add(obj);
+    placed.push(item);
+    if (auto) { setDirty(true); select(item); }
+    done();
+  }, undefined, err => { console.error(err); toast('Impossibile caricare il modello'); done(); });
+}
 
-            document.getElementById('saveBtn').addEventListener('click', saveUserHouse);
-            window.addEventListener('resize', onWindowResize);
-            animate();
-        }
+function rotateSelected() {
+  const it = selected; if (!it) return;
+  const p = it.mesh.position.clone(), r = it.mesh.rotation.y;
+  it.mesh.rotation.y += Math.PI / 2;
+  clamp(it);
+  if (collides(it)) {
+    it.mesh.position.copy(p); it.mesh.rotation.y = r; clamp(it);
+    toast('Non c\'è spazio per ruotarlo qui'); buzz(30);
+  } else { setDirty(true); helper.update(); }
+}
 
-        function showObjectMenu(obj) {
-            selectedObject = obj;
-            const menu = document.getElementById('objectMenu');
-            menu.style.display = 'block';
-            updateMenuPosition();
-        }
+function removeSelected() {
+  const it = selected; if (!it) return;
+  select(null);
+  scene.remove(it.mesh);
+  placed.splice(placed.indexOf(it), 1);
+  setDirty(true);
+  toast('Mobile rimosso', 'Annulla', () => { scene.add(it.mesh); placed.push(it); setDirty(true); });
+}
 
-        function hideObjectMenu() {
-            const menu = document.getElementById('objectMenu');
-            menu.style.display = 'none';
-        }
+/* ---------- Touch: tap to select, drag to move ---------- */
+function aim(e) {
+  mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  raycaster.setFromCamera(mouse, camera);
+}
 
-        function updateMenuPosition() {
-            if (selectedObject && document.getElementById('objectMenu').style.display === 'block') {
-                const vector = selectedObject.position.clone();
-                vector.y += 0.8;
-                vector.project(camera);
-                const x = (vector.x * .5 + .5) * window.innerWidth;
-                const y = (-(vector.y * .5) + .5) * window.innerHeight;
-                const menu = document.getElementById('objectMenu');
-                menu.style.left = `${x}px`;
-                menu.style.top = `${y}px`;
-            }
-        }
+function pickItem() {
+  const hits = raycaster.intersectObjects(placed.map(i => i.mesh), true);
+  if (!hits.length) return null;
+  let o = hits[0].object;
+  while (o.parent && o.parent !== scene) o = o.parent;
+  return placed.find(i => i.mesh === o) || null;
+}
 
-        function clampToBounds(obj, box) {
-            box.setFromObject(obj);
-            
-            const minMarginX = obj.position.x - box.min.x;
-            const maxMarginX = box.max.x - obj.position.x;
-            const minMarginZ = obj.position.z - box.min.z;
-            const maxMarginZ = box.max.z - obj.position.z;
+function onDown(e) {
+  if (e.target !== renderer.domElement || drag) return;
+  $('hint').classList.add('off');
+  closeSheet();
+  aim(e);
+  const it = pickItem();
+  if (it) {
+    select(it);
+    const p = new THREE.Vector3();
+    raycaster.ray.intersectPlane(dragPlane, p);
+    drag = { id: e.pointerId, item: it, off: it.mesh.position.clone().sub(p), pos: it.mesh.position.clone(), moved: false, x: e.clientX, y: e.clientY };
+    controls.enabled = false;
+  } else {
+    tap = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  }
+}
 
-            const allowedMinX = roomBounds.minX + minMarginX;
-            const allowedMaxX = roomBounds.maxX - maxMarginX;
-            const allowedMinZ = roomBounds.minZ + minMarginZ;
-            const allowedMaxZ = roomBounds.maxZ - maxMarginZ;
+function onMove(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
+  drag.moved = true;
+  aim(e);
+  const p = new THREE.Vector3();
+  if (!raycaster.ray.intersectPlane(dragPlane, p)) return;
+  drag.item.mesh.position.copy(p.add(drag.off));
+  clamp(drag.item);
+  helper.material.color.set(collides(drag.item) ? 0xff4757 : 0x2ed573);
+}
 
-            obj.position.x = Math.max(allowedMinX, Math.min(allowedMaxX, obj.position.x));
-            obj.position.z = Math.max(allowedMinZ, Math.min(allowedMaxZ, obj.position.z));
-            obj.position.y = 0;
+function onUp(e) {
+  if (drag && e.pointerId === drag.id) {
+    const it = drag.item;
+    controls.enabled = true;
+    if (drag.moved) {
+      if (collides(it)) {
+        it.mesh.position.copy(drag.pos);
+        toast('Lì c\'è già un altro mobile'); buzz(30);
+      } else setDirty(true);
+    }
+    if (helper) helper.material.color.set(0x2ed573);
+    drag = null;
+  } else if (tap && e.pointerId === tap.id) {
+    if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 8) select(null);
+    tap = null;
+  }
+}
 
-            box.setFromObject(obj);
-        }
+/* ---------- Persistence ---------- */
+async function loadUserHouse() {
+  try { const c = localStorage.getItem('wall_' + numero); if (c) setWall(c, false); } catch (e) {}
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/house/${numero}`);
+    const data = await res.json();
+    if (data.success && data.house) {
+      if (data.house.wallColor) setWall(data.house.wallColor, false);
+      if (Array.isArray(data.house.furniture)) {
+        data.house.furniture.forEach(i => spawnItem(i.modelName, i.x, i.z, i.rotationY, i.id, false));
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    toast('Non riesco a caricare la tua casa. Controlla la connessione.');
+  }
+}
 
-        function spawnItem(type, x, z, rotY = 0, customId = null, autoSelect = false) {
-            const loader = new THREE.GLTFLoader();
-            const path = assetPaths[type] || assetPaths["Chair"];
+async function saveUserHouse() {
+  const btn = $('saveBtn');
+  btn.disabled = true; btn.firstChild.nodeValue = 'Salvo…';
+  const furniture = placed.map(i => ({ id: i.id, modelName: i.modelName, x: i.mesh.position.x, y: 0, z: i.mesh.position.z, rotationY: i.mesh.rotation.y }));
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/house/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ numero, houseType: 'monolocale', wallColor: '#' + wallMaterial.color.getHexString(), furniture })
+    });
+    const data = await res.json();
+    if (data.success) { setDirty(false); toast('Casa salvata ✓'); }
+    else toast('Salvataggio non riuscito: ' + (data.message || 'riprova'));
+  } catch (err) {
+    console.error(err);
+    toast('Nessuna connessione. Riprova tra poco.');
+  }
+  btn.disabled = false; btn.firstChild.nodeValue = 'Salva';
+}
 
-            loader.load(path, (gltf) => {
-                const obj = gltf.scene;
-                obj.scale.set(1.5, 1.5, 1.5);
-                obj.position.set(x, 0, z);
-                obj.rotation.y = rotY;
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  if (helper) helper.update();
+  renderer.render(scene, camera);
+}
 
-                const box = new THREE.Box3().setFromObject(obj);
-                
-                const itemData = {
-                    id: customId || 'item_' + Date.now(),
-                    modelName: type,
-                    mesh: obj,
-                    box: box
-                };
-
-                clampToBounds(obj, box);
-
-                let attempts = 0;
-                while (checkObjectCollisions(itemData) && attempts < 5) {
-                    obj.position.x += 0.8;
-                    clampToBounds(obj, box);
-                    attempts++;
-                }
-
-                scene.add(obj);
-                placedObjects.push(itemData);
-
-                if (autoSelect) {
-                    showObjectMenu(obj);
-                }
-            }, undefined, (error) => {
-                console.error("Errore caricamento modello glb:", error);
-            });
-        }
-
-        function onPointerDown(event) {
-            if (event.clientX < 260 && event.clientY < 480) return;
-            // Se clicchi dentro il menu, non fare nulla
-            if (event.target.closest('#objectMenu')) return;
-
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            
-            const meshes = placedObjects.map(i => i.mesh);
-            const intersects = raycaster.intersectObjects(meshes, true);
-
-            if (intersects.length > 0) {
-                let clickedRoot = intersects[0].object;
-                while (clickedRoot.parent && clickedRoot.parent !== scene) {
-                    clickedRoot = clickedRoot.parent;
-                }
-                
-                // Mostra il menu sull'oggetto cliccato se non stiamo già trascinando
-                if (!isDragging) {
-                    showObjectMenu(clickedRoot);
-                }
-            } else {
-                // Se clicchi nel vuoto e non stai trascinando, chiudi il menu
-                if (!isDragging) {
-                    hideObjectMenu();
-                    selectedObject = null;
-                }
-            }
-        }
-
-        function onPointerMove(event) {
-            if (!isDragging || !selectedObject) return;
-
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const targetPos = new THREE.Vector3();
-            raycaster.ray.intersectPlane(dragPlane, targetPos);
-
-            if (targetPos) {
-                selectedObject.position.x = targetPos.x;
-                selectedObject.position.z = targetPos.z;
-                selectedObject.position.y = 0;
-
-                const activeItem = placedObjects.find(i => i.mesh === selectedObject);
-                if (activeItem) {
-                    clampToBounds(selectedObject, activeItem.box);
-                }
-            }
-        }
-
-        function onPointerUp(event) {
-            if (!isDragging) return;
-            isDragging = false;
-            controls.enabled = true;
-
-            if (selectedObject) {
-                const activeItem = placedObjects.find(i => i.mesh === selectedObject);
-                if (activeItem) {
-                    activeItem.box.setFromObject(selectedObject);
-                    if (checkObjectCollisions(activeItem)) {
-                        alert("⚠️ Spazio occupato da un altro oggetto!");
-                        selectedObject.position.copy(lastValidPosition);
-                        selectedObject.rotation.y = lastValidRotation;
-                        activeItem.box.setFromObject(selectedObject);
-                    } else {
-                        // Riattiva il menu dopo aver posizionato l'oggetto
-                        showObjectMenu(selectedObject);
-                    }
-                }
-            }
-        }
-
-        function checkObjectCollisions(currentItem) {
-            currentItem.box.setFromObject(currentItem.mesh);
-            for (let i = 0; i < placedObjects.length; i++) {
-                if (placedObjects[i].mesh !== currentItem.mesh) {
-                    placedObjects[i].box.setFromObject(placedObjects[i].mesh);
-                    if (currentItem.box.intersectsBox(placedObjects[i].box)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        async function loadUserHouse() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/house/${numero}`);
-                const data = await res.json();
-                if (data.success && data.house && Array.isArray(data.house.furniture)) {
-                    data.house.furniture.forEach(item => {
-                        spawnItem(item.modelName, item.x, item.z, item.rotationY, item.id, false);
-                    });
-                }
-            } catch (err) {
-                console.error("Errore nel caricamento della casa dal DB:", err);
-            }
-        }
-
-        async function saveUserHouse() {
-            const furnitureData = placedObjects.map(item => ({
-                id: item.id,
-                modelName: item.modelName,
-                x: item.mesh.position.x,
-                y: 0,
-                z: item.mesh.position.z,
-                rotationY: item.mesh.rotation.y
-            }));
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/house/save`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ numero, houseType: 'monolocale', furniture: furnitureData })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert("Casa salvata con successo nel database!");
-                } else {
-                    alert("Errore durante il salvataggio: " + (data.message || ''));
-                }
-            } catch (err) {
-                console.error("Errore di rete:", err);
-            }
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            updateMenuPosition(); // Aggiorna costantemente la posizione del menu sullo schermo
-            renderer.render(scene, camera);
-        }
-    </script>
+init();
+loadUserHouse();
+</script>
 </body>
 </html>
