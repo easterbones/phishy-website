@@ -43,7 +43,7 @@
     </div>
 
     <div id="instructions">
-        💡 <b>Istruzioni:</b> Clicca su un oggetto per muoverlo sul pavimento. Trascina lo spazio vuoto per ruotare la visuale.
+        💡 <b>Istruzioni:</b> Clicca su un oggetto per muoverlo sul pavimento. I mobili si fermeranno automaticamente contro i bordi.
     </div>
 
     <script>
@@ -94,10 +94,7 @@
             // TransformControls per muovere gli oggetti
             transformControls = new THREE.TransformControls(camera, renderer.domElement);
             transformControls.size = 0.8;
-            
-            // BLOCCA IL MOVIMENTO VERTICALE (Asse Y): L'oggetto non può sprofondare né volare
-            transformControls.showY = false;
-            
+            transformControls.showY = false; // Blocca asse verticale
             scene.add(transformControls);
 
             transformControls.addEventListener('dragging-changed', (event) => {
@@ -106,18 +103,18 @@
                     lastValidPosition.copy(transformControls.object.position);
                     lastValidRotation = transformControls.object.rotation.y;
                 } else if (!event.value && transformControls.object) {
-                    // Forza sempre Y a 0 per sicurezza al rilascio
-                    transformControls.object.position.y = 0;
-
-                    const activeItem = placedObjects.find(i => i.mesh === transformControls.object);
+                    const obj = transformControls.object;
+                    const activeItem = placedObjects.find(i => i.mesh === obj);
                     if (activeItem) {
-                        activeItem.box.setFromObject(activeItem.mesh);
-                        if (checkCollision(activeItem)) {
-                            alert("⚠️ Spazio occupato o fuori dai confini del pavimento!");
-                            transformControls.object.position.copy(lastValidPosition);
-                            transformControls.object.rotation.y = lastValidRotation;
-                            transformControls.object.position.y = 0;
-                            activeItem.box.setFromObject(activeItem.mesh);
+                        // Clampa l'oggetto esattamente sul bordo della mappa
+                        clampToBounds(obj, activeItem.box);
+
+                        // Controlla se urta un altro oggetto
+                        if (checkObjectCollisions(activeItem)) {
+                            alert("⚠️ Spazio occupato da un altro oggetto!");
+                            obj.position.copy(lastValidPosition);
+                            obj.rotation.y = lastValidRotation;
+                            activeItem.box.setFromObject(obj);
                         }
                     }
                 }
@@ -138,7 +135,6 @@
             floor.rotation.x = -Math.PI / 2;
             scene.add(floor);
 
-            // Limiti esatti corrispondenti al pavimento 10x10
             roomBounds = { minX: -5, maxX: 5, minZ: -5, maxZ: 5 };
 
             window.addEventListener('pointerdown', onPointerDown);
@@ -157,11 +153,11 @@
                     
                     const activeItem = placedObjects.find(i => i.mesh === transformControls.object);
                     if (activeItem) {
-                        activeItem.box.setFromObject(activeItem.mesh);
-                        if (checkCollision(activeItem)) {
+                        clampToBounds(transformControls.object, activeItem.box);
+                        if (checkObjectCollisions(activeItem)) {
                             transformControls.object.rotation.y = lastValidRotation;
-                            activeItem.box.setFromObject(activeItem.mesh);
-                            alert("⚠️ Rotazione non consentita: collisione rilevata!");
+                            clampToBounds(transformControls.object, activeItem.box);
+                            alert("⚠️ Rotazione non consentita: collisione con un altro oggetto!");
                         }
                     }
                 }
@@ -172,6 +168,27 @@
             animate();
         }
 
+        // Funzione per mantenere l'oggetto dentro i bordi agganciandolo al limite
+        function clampToBounds(obj, box) {
+            box.setFromObject(obj);
+            
+            const minMarginX = obj.position.x - box.min.x;
+            const maxMarginX = box.max.x - obj.position.x;
+            const minMarginZ = obj.position.z - box.min.z;
+            const maxMarginZ = box.max.z - obj.position.z;
+
+            const allowedMinX = roomBounds.minX + minMarginX;
+            const allowedMaxX = roomBounds.maxX - maxMarginX;
+            const allowedMinZ = roomBounds.minZ + minMarginZ;
+            const allowedMaxZ = roomBounds.maxZ - maxMarginZ;
+
+            obj.position.x = Math.max(allowedMinX, Math.min(allowedMaxX, obj.position.x));
+            obj.position.z = Math.max(allowedMinZ, Math.min(allowedMaxZ, obj.position.z));
+            obj.position.y = 0;
+
+            box.setFromObject(obj);
+        }
+
         function spawnItem(type, x, z, rotY = 0, customId = null, autoSelect = false) {
             const loader = new THREE.GLTFLoader();
             const path = assetPaths[type] || assetPaths["Chair"];
@@ -179,7 +196,7 @@
             loader.load(path, (gltf) => {
                 const obj = gltf.scene;
                 obj.scale.set(1.5, 1.5, 1.5);
-                obj.position.set(x, 0, z); // Forza Y a 0
+                obj.position.set(x, 0, z);
                 obj.rotation.y = rotY;
 
                 const box = new THREE.Box3().setFromObject(obj);
@@ -191,11 +208,12 @@
                     box: box
                 };
 
+                clampToBounds(obj, box);
+
                 let attempts = 0;
-                while (checkCollision(itemData) && attempts < 5) {
+                while (checkObjectCollisions(itemData) && attempts < 5) {
                     obj.position.x += 0.8;
-                    obj.position.y = 0;
-                    itemData.box.setFromObject(obj);
+                    clampToBounds(obj, box);
                     attempts++;
                 }
 
@@ -230,17 +248,8 @@
             }
         }
 
-        function checkCollision(currentItem) {
-            const boxMin = currentItem.box.min;
-            const boxMax = currentItem.box.max;
-
-            // Controllo confini del pavimento (da -5 a 5)
-            if (boxMin.x < roomBounds.minX || boxMax.x > roomBounds.maxX ||
-                boxMin.z < roomBounds.minZ || boxMax.z > roomBounds.maxZ) {
-                return true;
-            }
-
-            // Controllo sovrapposizione con altri oggetti
+        function checkObjectCollisions(currentItem) {
+            currentItem.box.setFromObject(currentItem.mesh);
             for (let i = 0; i < placedObjects.length; i++) {
                 if (placedObjects[i].mesh !== currentItem.mesh) {
                     placedObjects[i].box.setFromObject(placedObjects[i].mesh);
@@ -271,7 +280,7 @@
                 id: item.id,
                 modelName: item.modelName,
                 x: item.mesh.position.x,
-                y: 0, // Forza sempre 0 per l'altezza salvata
+                y: 0,
                 z: item.mesh.position.z,
                 rotationY: item.mesh.rotation.y
             }));
