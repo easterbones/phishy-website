@@ -37,6 +37,9 @@
     </div>
 
     <script>
+        // Dominio del backend API (con la 's')
+        const API_BASE_URL = "https://phishy-websites.onrender.com";
+
         // Estrae il numero di telefono dai parametri della query string (es. ?393534409026 o ?numero=393534409026)
         const urlParams = new URLSearchParams(window.location.search);
         let numero = urlParams.get('numero') || urlParams.get('phone');
@@ -165,9 +168,9 @@
 
         async function loadUserHouse() {
             try {
-                const res = await fetch(`/api/house/${numero}`);
+                const res = await fetch(`${API_BASE_URL}/api/house/${numero}`);
                 const data = await res.json();
-                if (data.success && data.house && data.house.furniture) {
+                if (data.success && data.house && Array.isArray(data.house.furniture)) {
                     data.house.furniture.forEach(item => {
                         spawnItem(item.modelName, item.x, item.z, item.rotationY, item.id);
                     });
@@ -188,7 +191,7 @@
             }));
 
             try {
-                const res = await fetch('/api/house/save', {
+                const res = await fetch(`${API_BASE_URL}/api/house/save`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ numero, houseType: 'monolocale', furniture: furnitureData })
