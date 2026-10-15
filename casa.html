@@ -10,13 +10,16 @@
             position: absolute; top: 10px; left: 10px; z-index: 10;
             background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            max-width: 220px;
         }
         button, select {
             background: #ff4757; color: white; border: none; padding: 8px 12px;
-            margin: 5px 0; border-radius: 4px; cursor: pointer; font-weight: bold;
+            margin: 4px 0; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;
         }
         button:hover { background: #ff6b81; }
         select { background: #2f3542; }
+        .view-btn { background: #2ed573; }
+        .view-btn:hover { background: #26af5f; }
         #instructions {
             position: absolute; bottom: 10px; left: 10px; z-index: 10;
             background: rgba(0,0,0,0.7); padding: 10px; border-radius: 6px; font-size: 13px; pointer-events: none;
@@ -36,14 +39,18 @@
             <option value="Chair">Sedia</option>
             <option value="Table">Tavolo</option>
             <option value="Bed">Letto</option>
-        </select><br>
+        </select>
         <button id="spawnBtn">Aggiungi Oggetto</button>
         <button id="rotateBtn">Ruota Selezionato (90°)</button>
+        <hr style="border:0; border-top:1px solid #444; margin:8px 0;">
+        <button id="topViewBtn" class="view-btn">Vista dall'Alto</button>
+        <button id="view3dBtn" class="view-btn">Vista 3D</button>
+        <hr style="border:0; border-top:1px solid #444; margin:8px 0;">
         <button id="saveBtn">Salva Casa</button>
     </div>
 
     <div id="instructions">
-        💡 <b>Istruzioni:</b> Clicca su un oggetto per muoverlo sul pavimento. I mobili si fermeranno automaticamente contro i bordi.
+        💡 <b>Comandi:</b> Tasto destro/Shift + trascina per spostarti. Tasto sinistro per ruotare o selezionare mobili.
     </div>
 
     <script>
@@ -88,13 +95,17 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
+            // Configurazione OrbitControls per movimento, zoom e rotazione liberi
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
+            controls.enablePan = true;
+            controls.enableRotate = true;
+            controls.enableZoom = true;
 
             // TransformControls per muovere gli oggetti
             transformControls = new THREE.TransformControls(camera, renderer.domElement);
             transformControls.size = 0.8;
-            transformControls.showY = false; // Blocca asse verticale
+            transformControls.showY = false; // Blocca altezza sul pavimento
             scene.add(transformControls);
 
             transformControls.addEventListener('dragging-changed', (event) => {
@@ -106,10 +117,7 @@
                     const obj = transformControls.object;
                     const activeItem = placedObjects.find(i => i.mesh === obj);
                     if (activeItem) {
-                        // Clampa l'oggetto esattamente sul bordo della mappa
                         clampToBounds(obj, activeItem.box);
-
-                        // Controlla se urta un altro oggetto
                         if (checkObjectCollisions(activeItem)) {
                             alert("⚠️ Spazio occupato da un altro oggetto!");
                             obj.position.copy(lastValidPosition);
@@ -127,9 +135,21 @@
             dirLight.position.set(10, 20, 10);
             scene.add(dirLight);
 
-            // Pavimento 10x10 (da -5 a 5)
+            // Caricamento Texture Pavimento da public/furnitures/pavimento.png
             const floorGeo = new THREE.PlaneGeometry(10, 10);
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
+            const textureLoader = new THREE.TextureLoader();
+            
+            const floorTexture = textureLoader.load('furnitures/pavimento.png', (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(4, 4); // Regola qui quante volte ripetere la texture sul pavimento
+            });
+
+            const floorMat = new THREE.MeshStandardMaterial({ 
+                map: floorTexture, 
+                roughness: 0.8 
+            });
+
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.name = "floor";
             floor.rotation.x = -Math.PI / 2;
@@ -138,6 +158,19 @@
             roomBounds = { minX: -5, maxX: 5, minZ: -5, maxZ: 5 };
 
             window.addEventListener('pointerdown', onPointerDown);
+
+            // Pulsanti UI per la gestione della telecamera
+            document.getElementById('topViewBtn').addEventListener('click', () => {
+                camera.position.set(0, 15, 0.001);
+                controls.target.set(0, 0, 0);
+                controls.update();
+            });
+
+            document.getElementById('view3dBtn').addEventListener('click', () => {
+                camera.position.set(0, 10, 12);
+                controls.target.set(0, 0, 0);
+                controls.update();
+            });
 
             document.getElementById('spawnBtn').addEventListener('click', () => {
                 const type = document.getElementById('itemSelect').value;
@@ -168,7 +201,6 @@
             animate();
         }
 
-        // Funzione per mantenere l'oggetto dentro i bordi agganciandolo al limite
         function clampToBounds(obj, box) {
             box.setFromObject(obj);
             
@@ -229,7 +261,7 @@
         }
 
         function onPointerDown(event) {
-            if (event.clientX < 260 && event.clientY < 250) return;
+            if (event.clientX < 260 && event.clientY < 340) return;
 
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -286,33 +318,4 @@
             }));
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/house/save`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ numero, houseType: 'monolocale', furniture: furnitureData })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert("Casa salvata con successo nel database!");
-                } else {
-                    alert("Errore durante il salvataggio: " + (data.message || ''));
-                }
-            } catch (err) {
-                console.error("Errore di rete:", err);
-            }
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-    </script>
-</body>
-</html>
+                const res = await fetch
