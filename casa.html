@@ -49,13 +49,16 @@ body.sel #selbar{display:flex}
 h2{font-size:16px;margin:0 0 12px}
 .grid{display:grid;gap:10px}
 #cards{grid-template-columns:repeat(3,1fr)}
-.card{min-height:100px;border-radius:16px;background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700;text-align:center;padding:8px}
-.card span{font-size:30px;line-height:1}
+.card{min-height:110px;border-radius:16px;background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:13px;padding:8px;text-align:center}
+.card img{width:56px;height:56px;object-fit:contain}
 #swatches{grid-template-columns:repeat(4,1fr)}
 .sw{height:54px;border-radius:14px;border:3px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
 .sw.on{border-color:#fff}
 .custom{display:flex;align-items:center;justify-content:space-between;margin-top:14px;color:var(--mut)}
 .custom input{width:84px;height:44px;border:0;border-radius:12px;background:var(--raise);padding:3px}
+
+#objectMenu{display:none;position:absolute;z-index:20;background:rgba(34,29,47,.95);padding:10px;border-radius:12px;border:1px solid var(--line);transform:translate(-50%,-110%);box-shadow:0 4px 15px rgba(0,0,0,.7);min-width:140px;text-align:center}
+#objectMenu button{font-size:12px;padding:8px 12px;margin:3px 0;width:100%;border-radius:8px;background:var(--raise);font-weight:700}
 
 #toast{position:fixed;left:12px;right:84px;bottom:calc(var(--dock) + env(safe-area-inset-bottom) + 24px);z-index:9;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;color:#17141f;padding:12px 14px;border-radius:14px;font-weight:600;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}
 #toast.on{opacity:1;transform:none;pointer-events:auto}
@@ -79,17 +82,24 @@ h2{font-size:16px;margin:0 0 12px}
   <button class="fab" id="centerBtn" aria-label="Ricentra telecamera"><b>⌖</b><span>Ricentra</span></button>
 </div>
 
+<div id="objectMenu">
+  <div style="font-size:11px; margin-bottom:6px; font-weight:700; color:var(--mut);">OPZIONI OGGETTO</div>
+  <button id="menuRotateBtn">Ruota 90 gradi</button>
+  <button id="menuMoveBtn">Sposta</button>
+  <button id="menuCloseBtn" style="background:#3a3350; margin-top:4px;">Chiudi</button>
+</div>
+
 <div id="toast" role="status"></div>
 
 <nav id="dock">
-  <button class="big main" id="openAdd"><span>＋</span>Aggiungi mobile</button>
-  <button class="big" id="openWall"><span>🎨</span>Colore muri</button>
+  <button class="big main" id="openAdd">Aggiungi mobile</button>
+  <button class="big" id="openWall">Colore muri</button>
 </nav>
 <nav id="selbar">
   <div id="selName"></div>
-  <button class="big" id="rotBtn"><span>↻</span>Ruota</button>
-  <button class="big warn" id="delBtn"><span>🗑</span>Elimina</button>
-  <button class="big ok" id="doneBtn"><span>✓</span>Fine</button>
+  <button class="big" id="rotBtn">Ruota</button>
+  <button class="big warn" id="delBtn">Elimina</button>
+  <button class="big ok" id="doneBtn">Fine</button>
 </nav>
 
 <section id="sheet" aria-live="polite">
@@ -209,19 +219,6 @@ const NAMES = {
   Work_Table_06: 'Scrivania'
 };
 
-const ICONS = {
-  Armchair_02: '🛋️', Armchair_18: '🛋️', Bath_03: '🛁', Bed_02: '🛏️', Bed_07: '🛏️',
-  Book_03: '📚', Book_08: '📖', Chair_17: '🪑', Chair_PC_04: '💺', Clock_03: '⏰',
-  Closet_01: '🚪', Closet_02: '🚪', Coffee_Table_03: '☕', Computer_01: '💻', Couch_08: '🛋️',
-  Couch_11: '🛋️', Cutting_board_02: '🔪', ExerciseBike_01: '🚴', Fridge_01: '🧊', GameConsole_01: '🎮',
-  Guitar_01: '🎸', Kitchen_D_01: '🍳', Kitchen_D_06: '🍳', Kitchen_D_08: '🍳', Kitchen_D_09: '🍳',
-  Kitchen_D_10: '🍳', Kitchen_Table_09: '🍽️', Light_05: '💡', Microwave_01: '🍲', Mixer_08: '🍹',
-  Nightstand_02: '🗄️', Paper_01: '📄', Paper_02: '📃', Picture_08: '🖼️', Picture_17: '🖼️',
-  Picture_21: '🖼️', Plants_05: '🪴', Plants_15: '🪴', Plants_19: '🌿', Toilet_03: '🚽',
-  Toothbrush_01: '🪥', Toothpaste_01: '🦷', Toy_02: '🧸', Toy_03: '🧸', Utensils_01: '🍴',
-  Wash_Basin_07: '🚰', Work_Table_06: '🖥️'
-};
-
 const WALLS = ['#ffffff', '#f3e9dc', '#cfe3f0', '#d9ead3', '#f4cccc', '#e6d5f0', '#3d4a5c', '#2b2b2b'];
 const BOUNDS = { minX: -4.8, maxX: 4.8, minZ: -4.8, maxZ: 4.8 };
 
@@ -251,9 +248,9 @@ function toast(msg, act, fn) {
 }
 
 function openSheet(which) { select(null); $('sheet').dataset.open = which; }
-function closeSheet() { delete $('sheet').dataset.open; }
+function closeSheet() { delete $('sheet').dataset.open; hideObjectMenu(); }
 
-function select(item) {
+function showObjectMenu(item) {
   selected = item;
   if (helper) { scene.remove(helper); helper = null; }
   if (item) {
@@ -261,8 +258,25 @@ function select(item) {
     scene.add(helper);
     $('selName').textContent = NAMES[item.modelName] || 'Mobile';
     closeSheet();
+    updateMenuPosition();
+    $('objectMenu').style.display = 'block';
   }
-  document.body.classList.toggle('sel', !!item);
+}
+
+function hideObjectMenu() {
+  $('objectMenu').style.display = 'none';
+}
+
+function updateMenuPosition() {
+  if (!selected || $('objectMenu').style.display === 'none') return;
+  const vector = selected.mesh.position.clone();
+  vector.y += 0.8;
+  vector.project(camera);
+  const x = (vector.x * .5 + .5) * window.innerWidth;
+  const y = (-(vector.y * .5) + .5) * window.innerHeight;
+  const menu = $('objectMenu');
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
 }
 
 function setWall(c, fromUser) {
@@ -351,16 +365,20 @@ function init() {
   Object.keys(assetPaths).forEach(type => {
     const b = document.createElement('button');
     b.className = 'card';
-    b.innerHTML = `<span>${ICONS[type] || '📦'}</span>${NAMES[type] || type}`;
+    b.innerHTML = `<img id="thumb_${type}" alt="${NAMES[type]}"><br>${NAMES[type]}`;
     b.onclick = () => { closeSheet(); spawnItem(type, 0, 0, 0, null, true); };
     $('cards').append(b);
   });
 
+  // Genera le anteprime 3D per ogni modello
+  generateThumbnails();
+
   $('openAdd').onclick = () => openSheet('add');
   $('openWall').onclick = () => openSheet('wall');$('scrim').onclick = closeSheet;
-  $('rotBtn').onclick = rotateSelected;
+  $('menuRotateBtn').onclick = () => { rotateSelected(); hideObjectMenu(); };$('menuMoveBtn').onclick = () => { hideObjectMenu(); if (selected) { drag = { id: -1, item: selected, off: new THREE.Vector3(), pos: selected.mesh.position.clone(), moved: true }; controls.enabled = false; } };
+  $('menuCloseBtn').onclick = () => { hideObjectMenu(); selected = null; if(helper){scene.remove(helper); helper=null;} };$('rotBtn').onclick = rotateSelected;
   $('delBtn').onclick = removeSelected;
-  $('doneBtn').onclick = () => select(null);$('viewBtn').onclick = () => setView(!topMode);
+  $('doneBtn').onclick = () => { hideObjectMenu(); selected = null; if(helper){scene.remove(helper); helper=null;} document.body.classList.remove('sel'); };$('viewBtn').onclick = () => setView(!topMode);
   $('centerBtn').onclick = () => setView(topMode);$('saveBtn').onclick = saveUserHouse;
 
   window.addEventListener('pointerdown', onDown, true);
@@ -377,6 +395,49 @@ function init() {
 
   setView(false);
   animate();
+}
+
+/* ---------- Thumbnail Generator ---------- */
+async function generateThumbnails() {
+  const loader = new THREE.GLTFLoader();
+  const c = document.createElement('canvas');
+  c.width = 120; c.height = 120;
+  const thumbRen = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: true });
+  thumbRen.setSize(120, 120);
+
+  const thumbScene = new THREE.Scene();
+  const thumbCam = new THREE.PerspectiveCamera(45, 1, 0.1, 50);
+  thumbCam.position.set(2, 2, 2);
+  thumbCam.lookAt(0, 0, 0);
+
+  thumbScene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(5, 10, 7);
+  thumbScene.add(dir);
+
+  for (const [type, path] of Object.entries(assetPaths)) {
+    const imgEl = $(`thumb_${type}`);
+    if (!imgEl) continue;
+    await new Promise(resolve => {
+      loader.load(path, gltf => {
+        const obj = gltf.scene;
+        const box = new THREE.Box3().setFromObject(obj);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.4 / maxDim;
+        obj.scale.set(scale, scale, scale);
+        obj.position.sub(center.multiplyScalar(scale));
+
+        thumbScene.add(obj);
+        thumbRen.render(thumbScene, thumbCam);
+        imgEl.src = c.toDataURL('image/png');
+        thumbScene.remove(obj);
+        resolve();
+      }, undefined, () => resolve());
+    });
+  }
+  thumbRen.dispose();
 }
 
 /* ---------- Furniture ---------- */
@@ -420,7 +481,7 @@ function spawnItem(type, x, z, rotY = 0, id = null, auto = false) {
     if (auto && collides(item) && !freeSpot(item)) { toast('La stanza è piena'); done(); return; }
     scene.add(obj);
     placed.push(item);
-    if (auto) { setDirty(true); select(item); }
+    if (auto) { setDirty(true); showObjectMenu(item); document.body.classList.add('sel'); }
     done();
   }, undefined, err => { console.error(err); toast('Impossibile caricare il modello'); done(); });
 }
@@ -433,19 +494,20 @@ function rotateSelected() {
   if (collides(it)) {
     it.mesh.position.copy(p); it.mesh.rotation.y = r; clamp(it);
     toast('Non c\'è spazio per ruotarlo qui'); buzz(30);
-  } else { setDirty(true); helper.update(); }
+  } else { setDirty(true); if(helper) helper.update(); }
 }
 
 function removeSelected() {
   const it = selected; if (!it) return;
-  select(null);
+  hideObjectMenu();
   scene.remove(it.mesh);
   placed.splice(placed.indexOf(it), 1);
   setDirty(true);
+  document.body.classList.remove('sel');
   toast('Mobile rimosso', 'Annulla', () => { scene.add(it.mesh); placed.push(it); setDirty(true); });
 }
 
-/* ---------- Touch: tap to select, drag to move ---------- */
+/* ---------- Touch / Click Interaction ---------- */
 function aim(e) {
   mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(mouse, camera);
@@ -461,12 +523,14 @@ function pickItem() {
 
 function onDown(e) {
   if (e.target !== renderer.domElement || drag) return;
+  if (e.target.closest && e.target.closest('#objectMenu')) return;
   $('hint').classList.add('off');
   closeSheet();
   aim(e);
   const it = pickItem();
   if (it) {
-    select(it);
+    showObjectMenu(it);
+    document.body.classList.add('sel');
     const p = new THREE.Vector3();
     raycaster.ray.intersectPlane(dragPlane, p);
     drag = { id: e.pointerId, item: it, off: it.mesh.position.clone().sub(p), pos: it.mesh.position.clone(), moved: false, x: e.clientX, y: e.clientY };
@@ -480,12 +544,13 @@ function onMove(e) {
   if (!drag || e.pointerId !== drag.id) return;
   if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
   drag.moved = true;
+  hideObjectMenu();
   aim(e);
   const p = new THREE.Vector3();
   if (!raycaster.ray.intersectPlane(dragPlane, p)) return;
   drag.item.mesh.position.copy(p.add(drag.off));
   clamp(drag.item);
-  helper.material.color.set(collides(drag.item) ? 0xff4757 : 0x2ed573);
+  if (helper) helper.material.color.set(collides(drag.item) ? 0xff4757 : 0x2ed573);
 }
 
 function onUp(e) {
@@ -496,12 +561,20 @@ function onUp(e) {
       if (collides(it)) {
         it.mesh.position.copy(drag.pos);
         toast('Lì c\'è già un altro mobile'); buzz(30);
-      } else setDirty(true);
+      } else {
+        setDirty(true);
+      }
     }
     if (helper) helper.material.color.set(0x2ed573);
+    showObjectMenu(it);
     drag = null;
   } else if (tap && e.pointerId === tap.id) {
-    if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 8) select(null);
+    if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 8) {
+      hideObjectMenu();
+      selected = null;
+      if (helper) { scene.remove(helper); helper = null; }
+      document.body.classList.remove('sel');
+    }
     tap = null;
   }
 }
@@ -548,6 +621,7 @@ function animate() {
   requestAnimationFrame(animate);
   controls.update();
   if (helper) helper.update();
+  updateMenuPosition();
   renderer.render(scene, camera);
 }
 
