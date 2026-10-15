@@ -37,10 +37,16 @@
     </div>
 
     <script>
-        // Estrae il numero di telefono dall'URL (es. /casa/39333...) oppure richiede prompt se testato in locale
-        const pathParts = window.location.pathname.split('/');
-        let numero = pathParts[pathParts.length - 1];
-        if (!numero || numero === 'casa.html' || numero === 'casa') {
+        // Estrae il numero di telefono dai parametri della query string (es. ?393534409026 o ?numero=393534409026)
+        const urlParams = new URLSearchParams(window.location.search);
+        let numero = urlParams.get('numero') || urlParams.get('phone');
+        
+        if (!numero) {
+            const rawSearch = window.location.search.replace('?', '');
+            numero = rawSearch.replace(/[^0-9]/g, '');
+        }
+
+        if (!numero) {
             numero = prompt("Inserisci il tuo numero di telefono (es. 393331234567):") || "390000000000";
         }
         numero = numero.replace(/[^0-9]/g, '');
