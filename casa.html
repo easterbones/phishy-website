@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishy Home - Arreda la tua Casa</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: sans-serif; background: #111; color: #fff; }
+        #ui {
+            position: absolute; top: 10px; left: 10px; z-index: 10;
+            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        button, select {
+            background: #ff4757; color: white; border: none; padding: 8px 12px;
+            margin: 5px 0; border-radius: 4px; cursor: pointer; font-weight: bold;
+        }
+        button:hover { background: #ff6b81; }
+        select { background: #2f3542; }
+    </style>
+    <!-- Import Three.js e GLTFLoader via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="ui">
+        <h2>Arreda la tua Casa</h2>
+        <label>Seleziona Oggetto:</label><br>
+        <select id="itemSelect">
+            <option value="Chair">Sedia</option>
+            <option value="Table">Tavolo</option>
+            <option value="Bed">Letto</option>
+        </select><br>
+        <button id="spawnBtn">Aggiungi Oggetto</button>
+        <button id="saveBtn">Salva Casa</button>
+    </div>
+
+    <script>
+        const userId = "easterbone"; // ID utente di test o dinamico
+        let scene, camera, renderer, controls;
+        const placedObjects = [];
+        const boundingBoxes = [];
+        let selectedObject = null;
+        let roomBounds;
+
+        const assetPaths = {
+            "Chair": "Cute_Furniture_Free_glb/Separate_Assets_glb/Chair_02.glb",
+            "Table": "Cute_Furniture_Free_glb/Separate_Assets_glb/Armchair_02.glb",
+            "Bed": "Cute_Furniture_Free_glb/Separate_Assets_glb/Bed_02.glb"
+        };
+
+        init();
+        loadUserHouse();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x202020);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 12);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // Luci
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            dirLight.position.set(10, 20, 10);
+            scene.add(dirLight);
+
+            // Pavimento della stanza (es. Monolocale 10x10)
+            const floorGeo = new THREE.PlaneGeometry(10, 10);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            // Limiti fisici della stanza per il controllo grezzo dei confini
+            roomBounds = { minX: -4.5, maxX: 4.5, minZ: -4.5, maxZ: 4.5 };
+
+            document.getElementById('spawnBtn').addEventListener('click', () => {
+                const type = document.getElementById('itemSelect').value;
+                spawnItem(type, 0, 0, 0, 0);
+            });
+
+            document.getElementById('saveBtn').addEventListener('click', saveUserHouse);
+
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        function spawnItem(type, x, z, rotY = 0, customId = null) {
+            const loader = new THREE.GLTFLoader();
+            const path = assetPaths[type] || assetPaths["Chair"];
+
+            loader.load(path, (gltf) => {
+                const obj = gltf.scene;
+                obj.scale.set(1.5, 1.5, 1.5);
+                obj.position.set(x, 0, z);
+                obj.rotation.y = rotY;
+
+                // Calcolo rapido della Box di collisione grezza
+                const box = new THREE.Box3().setFromObject(obj);
+                
+                // Controllo collisione rapida all'inserimento
+                if (checkCollision(box)) {
+                    alert("Spazio occupato o fuori dai confini!");
+                    return;
+                }
+
+                scene.add(obj);
+                
+                const itemData = {
+                    id: customId || 'item_' + Date.now(),
+                    modelName: type,
+                    mesh: obj,
+                    box: box
+                };
+
+                placedObjects.push(itemData);
+                updateBoundingBoxes();
+            }, undefined, (error) => {
+                console.error("Errore caricamento modello glb:", error);
+            });
+        }
+
+        function updateBoundingBoxes() {
+            boundingBoxes.length = 0;
+            placedObjects.forEach(item => {
+                item.box.setFromObject(item.mesh);
+                boundingBoxes.push(item.box);
+            });
+        }
+
+        function checkCollision(newBox) {
+            // Controllo confini stanza
+            const boxMin = newBox.min;
+            const boxMax = newBox.max;
+            if (boxMin.x < roomBounds.minX || boxMax.x > roomBounds.maxX ||
+                boxMin.z < roomBounds.minZ || boxMax.z > roomBounds.maxZ) {
+                return true;
+            }
+
+            // Controllo sovrapposizione con altri oggetti esistenti
+            for (let i = 0; i < boundingBoxes.length; i++) {
+                if (newBox.intersectsBox(boundingBoxes[i])) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        async function loadUserHouse() {
+            try {
+                const res = await fetch(`/api/house/${userId}`);
+                const data = await res.json();
+                if (data.success && data.house.furniture) {
+                    data.house.furniture.forEach(item => {
+                        spawnItem(item.modelName, item.x, item.z, item.rotationY, item.id);
+                    });
+                }
+            } catch (err) {
+                console.error("Errore nel caricamento della casa dal DB:", err);
+            }
+        }
+
+        async function saveUserHouse() {
+            const furnitureData = placedObjects.map(item => ({
+                id: item.id,
+                modelName: item.modelName,
+                x: item.mesh.position.x,
+                y: item.mesh.position.y,
+                z: item.mesh.position.z,
+                rotationY: item.mesh.rotation.y
+            }));
+
+            try {
+                const res = await fetch('/api/house/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, houseType: 'monolocale', furniture: furnitureData })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Casa salvata con successo nel database!");
+                } else {
+                    alert("Errore durante il salvataggio.");
+                }
+            } catch (err) {
+                console.error("Errore di rete:", err);
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
