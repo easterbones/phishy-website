@@ -59,7 +59,7 @@ function verifyToken(token) {
     }
 }
 
-// Middleware di autenticazione per le rotte dello shop / blackjack / casa
+// Middleware di autenticazione per le rotte dello shop / blackjack
 function authShop(req, res, next) {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
@@ -508,13 +508,15 @@ app.get('/api/shop/order/:id', authShop, async (req, res) => {
     }
 });
 
-// ==================== ROTTE API CASA 3D ====================
+// ==================== ROTTE API CASA 3D (Compatibili con la tua casa.html) ====================
 
-app.get('/api/house/state', authShop, async (req, res) => {
+app.get('/api/house/:userId', async (req, res) => {
     try {
+        const userId = req.params.userId || 'easterbone';
+        const jid = userId.includes('@') ? userId : userId + '@s.whatsapp.net';
         await connect();
         const db = mongoose.connection.db;
-        const userDoc = await getShopUser(db, req.userJid);
+        const userDoc = await getShopUser(db, jid);
 
         res.set('Cache-Control', 'no-store');
         res.json({
@@ -522,32 +524,31 @@ app.get('/api/house/state', authShop, async (req, res) => {
             house: userDoc.casa || { houseType: 'monolocale', furniture: [] }
         });
     } catch (error) {
-        console.error('[API house state]', error.message);
+        console.error('[API house get]', error.message);
         res.status(500).json({ success: false, message: 'Errore di comunicazione col database.' });
     }
 });
 
-app.post('/api/house/save', authShop, async (req, res) => {
+app.post('/api/house/save', async (req, res) => {
     try {
-        const { houseType, furniture } = req.body || {};
-        if (!houseType || !Array.isArray(furniture)) {
-            return res.status(400).json({ success: false, message: 'Dati della casa non validi.' });
-        }
+        const { userId, houseType, furniture } = req.body || {};
+        const targetUser = userId || 'easterbone';
+        const jid = targetUser.includes('@') ? targetUser : targetUser + '@s.whatsapp.net';
 
         await connect();
         const db = mongoose.connection.db;
-        const userDoc = await getShopUser(db, req.userJid);
+        const userDoc = await getShopUser(db, jid);
 
         userDoc.casa = {
-            houseType: String(houseType),
-            furniture: furniture.map(item => ({
+            houseType: String(houseType || 'monolocale'),
+            furniture: Array.isArray(furniture) ? furniture.map(item => ({
                 id: String(item.id || ('item_' + Math.random())),
                 modelName: String(item.modelName || 'Chair'),
                 x: Number(item.x) || 0,
                 y: Number(item.y) || 0,
                 z: Number(item.z) || 0,
                 rotationY: Number(item.rotationY) || 0
-            }))
+            })) : []
         };
 
         await saveShopUser(db, userDoc);
