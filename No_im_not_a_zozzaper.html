@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>No, I'm not a zozzapper</title>
+<style>
+:root{--bg:#010807;--p0:#04100f;--p1:#08201e;--p2:#0d302c;--ln:#1b4a44;--t:#6ff5dc;--td:#3aa597;--tx:#cdeee8;--mu:#5f9a92;--red:#ff4d5e;--out:#0c3d37;box-sizing:border-box;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font-family:"Courier New",ui-monospace,monospace}
+body{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 45%,#07302b,#010807 72%)}
+#mon{width:min(98vw,1100px);height:min(96vh,780px);border:2px solid var(--ln);border-radius:26px/22px;background:var(--p0);box-shadow:0 0 70px #19d9b744,inset 0 0 90px #000;display:flex;flex-direction:column;overflow:hidden;position:relative;filter:saturate(.9)}
+#mon::before{content:"";position:absolute;inset:0;z-index:9;pointer-events:none;background:radial-gradient(ellipse at center,#0000 45%,#000d 100%),repeating-linear-gradient(0deg,#0000 0 2px,#00000030 3px);animation:fl 5s infinite}
+@keyframes fl{0%,92%,100%{opacity:1}94%{opacity:.8}96%{opacity:.95}}
+#mon.night{--p0:#0a0407;--p1:#1d0a10;--p2:#2e1018;--ln:#4a1b25;--t:#ff7b8a;--td:#b34455;--tx:#f0cdd2;--mu:#9a5f69;--out:#3d0c15}
+.glitch{animation:gl .15s infinite}
+@keyframes gl{0%{transform:translate(2px,0);filter:hue-rotate(90deg) contrast(1.6)}50%{transform:translate(-3px,1px);filter:invert(.9)}100%{transform:translate(1px,-2px);filter:saturate(3)}}
+#top{display:flex;align-items:center;gap:14px;padding:9px 16px;background:var(--p1);border-bottom:1px solid var(--ln);flex-wrap:wrap}
+#top b{font-size:15px;color:var(--t);letter-spacing:.5px;margin-right:auto;text-shadow:0 0 8px var(--t)}
+.pill{display:flex;align-items:center;gap:7px;padding:4px 10px;border:1px solid var(--ln);border-radius:20px;background:var(--p0);font-size:12px;color:var(--mu)}
+.pill svg{width:15px;height:15px;stroke:var(--t);fill:none;stroke-width:1.8}
+.seg{width:84px;height:8px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--p2) 0 6px,#0000 6px 8px);position:relative;overflow:hidden}
+.seg i{position:absolute;left:0;top:0;bottom:0;background:var(--t);box-shadow:0 0 8px var(--t);transition:width .6s;-webkit-mask:repeating-linear-gradient(90deg,#000 0 6px,#0000 6px 8px);mask:repeating-linear-gradient(90deg,#000 0 6px,#0000 6px 8px)}
+.seg.r i{background:var(--red)}
+.pill.ph{color:var(--t);border-color:var(--td)}
+#en span{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:3px;background:var(--p2);border:1px solid var(--td)}#en span.on{background:var(--t);box-shadow:0 0 6px var(--t)}
+#app{flex:1;display:grid;grid-template-columns:54px 250px 1fr;min-height:0}
+#rail{background:var(--p0);border-right:1px solid var(--ln);display:flex;flex-direction:column;align-items:center;gap:20px;padding-top:16px}
+#rail svg{width:22px;height:22px;stroke:var(--mu);fill:none;stroke-width:1.6}#rail svg.a{stroke:var(--t)}
+#side{background:var(--p0);border-right:1px solid var(--ln);display:flex;flex-direction:column;min-height:0}
+#side h2{margin:0;padding:14px 14px 8px;font-size:17px;color:var(--tx);font-weight:700}
+#list{overflow-y:auto;flex:1}
+.ci{display:flex;gap:10px;padding:10px 12px;align-items:center;border-bottom:1px solid #0d2623;font-size:13px}
+.ci.cur{background:var(--p2)}.ci small{display:block;color:var(--mu);font-size:11px;margin-top:2px}
+.ci .av{width:38px;height:38px;border-radius:50%;background:var(--p2);overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--ln)}
+.ci .av svg{width:100%;height:100%}.ci .ck{margin-left:auto;color:var(--t);font-size:15px}
+.ci.done{opacity:.55}
+#main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--p0)}
+#head{display:flex;align-items:center;gap:12px;padding:9px 14px;background:var(--p1);border-bottom:1px solid var(--ln);font-size:14px}
+#head .av{width:42px;height:42px;border-radius:50%;overflow:hidden;background:var(--p2);flex:none}
+#head svg{width:100%;height:100%}#head small{display:block;color:var(--mu);font-size:11px}
+.av svg,.m svg{filter:grayscale(1) sepia(1) hue-rotate(100deg) saturate(2.5) brightness(.95) contrast(1.15)}
+#mon.night .av svg,#mon.night .m svg{filter:grayscale(1) sepia(1) hue-rotate(300deg) saturate(2.5)}
+#chat{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:radial-gradient(circle at 20% 20%,#0a2a26 0,#0000 60%),var(--p0)}
+.m{max-width:min(78%,430px);padding:8px 11px;border-radius:0 10px 10px 10px;background:var(--p2);font-size:14px;line-height:1.4;align-self:flex-start;white-space:pre-wrap;border:1px solid var(--ln)}
+.m.me{background:var(--out);align-self:flex-end;border-radius:10px 0 10px 10px;border-color:var(--td)}
+.m.sys{align-self:center;background:var(--p1);color:var(--mu);font-size:12px;border-radius:12px;text-align:center}
+.m.bad{color:var(--red);border-color:var(--red)}
+.m .sn{display:block;font-size:11px;color:var(--t);margin-bottom:2px}
+.m .tm{float:right;margin:6px 0 0 12px;font-size:10px;color:var(--mu)}
+.m svg{width:160px;display:block;border-radius:6px;background:#111}
+.vm{display:flex;align-items:center;gap:8px;cursor:pointer}.vm span{width:30px;height:30px;border-radius:50%;background:var(--t);color:var(--p0);display:flex;align-items:center;justify-content:center;font-size:13px}
+.vm em{flex:1;height:18px;background:repeating-linear-gradient(90deg,var(--td) 0 2px,#0000 2px 5px);min-width:110px}
+.ig .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-top:6px}.ig .grid div{background:var(--p0);text-align:center;font-size:24px;padding:6px 0;border:1px solid var(--ln)}
+#foot{background:var(--p1);border-top:1px solid var(--ln);padding:10px 12px;display:flex;flex-direction:column;gap:9px}
+#acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:var(--p0);border:1px solid var(--ln);border-radius:12px;color:var(--tx);font:inherit;font-size:12px;cursor:pointer;transition:.15s}
+.ab svg{width:22px;height:22px;stroke:var(--t);fill:none;stroke-width:1.6}.ab small{color:var(--mu);font-size:10px}
+.ab:hover:not(:disabled){border-color:var(--t);box-shadow:0 0 12px #6ff5dc44;transform:translateY(-1px)}
+button:disabled{opacity:.3;cursor:default}button:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+#dec{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.db{padding:13px 8px;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;background:transparent;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.db svg{width:18px;height:18px;fill:none;stroke-width:2.4}
+.db.ok{border:2px solid var(--t);color:var(--t)}.db.ok svg{stroke:var(--t)}
+.db.no{border:2px solid var(--red);color:var(--red)}.db.no svg{stroke:var(--red)}
+.db.ok:hover{background:var(--t);color:var(--p0)}.db.ok:hover svg{stroke:var(--p0)}
+.db.no:hover{background:var(--red);color:#1a0306}.db.no:hover svg{stroke:#1a0306}
+#nxt{display:none;padding:14px;border:2px solid var(--t);color:var(--t);background:transparent;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+#nxt:hover{background:var(--t);color:var(--p0)}
+#mon.night #acts,#mon.night #dec{display:none}#mon.night #nxt{display:block}#mon.night #nxt:disabled{display:none}
+#ov{position:absolute;inset:0;z-index:10;background:#000e;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:16px}
+#ov h1{margin:0;font-size:30px;color:var(--t);text-shadow:0 0 14px var(--t)}#ov h1 u{text-decoration:none;color:var(--red)}
+#ov p{max-width:540px;color:#9fd0c8;font-size:14px;line-height:1.55;margin:0}
+#ov button{background:transparent;border:2px solid var(--t);color:var(--t);padding:12px 28px;font:inherit;font-size:15px;font-weight:700;border-radius:12px;cursor:pointer}
+#ov button:hover{background:var(--t);color:#021}
+.igm{padding:0;width:min(88%,300px);overflow:hidden}
+.ig2 .tb{display:flex;justify-content:space-between;padding:8px 10px;font-weight:700;font-size:13px;border-bottom:1px solid var(--ln)}
+.ig2 .hd{display:flex;align-items:center;gap:12px;padding:10px}
+.ia{width:62px;height:62px;border-radius:50%;overflow:hidden;border:2px solid var(--t);flex:none;display:flex;align-items:center;justify-content:center;background:var(--p0);font-size:26px}
+.ia svg{width:100%;height:100%}
+.st{display:flex;flex:1;justify-content:space-around;text-align:center;font-size:11px;color:var(--mu)}.st b{display:block;font-size:14px;color:var(--tx)}
+.ig2 .bi{padding:0 10px 8px;font-size:12px;line-height:1.4}
+.ig2 .bt{display:flex;gap:6px;padding:0 10px 8px}.bt span{flex:1;text-align:center;padding:5px;border-radius:7px;font-size:12px;border:1px solid var(--ln)}.bt span.f{background:var(--t);color:var(--p0);font-weight:700}
+.ig2 .tabs{display:flex;border-top:1px solid var(--ln)}.tabs span{flex:1;text-align:center;padding:5px;color:var(--mu)}.tabs span.on{color:var(--t);border-bottom:2px solid var(--t)}
+.ig2 .gr{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}.gr div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:30px}
+@media(max-width:800px){#app{grid-template-columns:1fr}#rail,#side{display:none}#mon{border-radius:10px;height:98vh}.seg{width:50px}}
+@media(prefers-reduced-motion:reduce){#mon::before,.glitch{animation:none}}
+</style></head><body>
+<div id="mon">
+ <div id="top"><b>Whatzap</b>
+  <div class="pill" title="Sanità mentale"><svg viewBox="0 0 24 24"><path d="M12 4C7 4 4 8 5 12c-1 3 1 6 4 6 1 2 5 2 6 0 3 0 5-3 4-6 1-4-2-8-7-8zM12 6v12"/></svg><div class="seg"><i id="bs"></i></div></div>
+  <div class="pill" title="Community"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 19c0-4 12-4 12 0M15 16c3-1 6 0 6 3"/></svg><div class="seg"><i id="bc"></i></div><span id="mem"></span></div>
+  <div class="pill" title="Azioni"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg><div id="en"></div></div>
+  <div class="pill ph" id="ph"></div>
+ </div>
+ <div id="app">
+  <nav id="rail"><svg class="a" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg><svg viewBox="0 0 24 24"><path d="M5 4l4 1 1 4-2 1c1 3 3 5 6 6l1-2 4 1 1 4c-9 3-17-6-15-15z"/></svg><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 19c0-4 12-4 12 0"/></svg></nav>
+  <aside id="side"><h2>Chat</h2><div id="list"></div></aside>
+  <main id="main"><div id="head"></div><div id="chat"></div>
+   <div id="foot">
+    <div id="acts">
+     <button class="ab" id="a1"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Selfie<small>1 azione</small></button>
+     <button class="ab" id="a2"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11c0 4 3 6 7 6s7-2 7-6M12 17v4"/></svg>Vocale<small>1 azione</small></button>
+     <button class="ab" id="a3"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.5"/><circle cx="17" cy="7" r=".6"/></svg>Instagram<small>1 azione</small></button>
+     <button class="ab" id="a4"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 19c0-4 12-4 12 0M15 16c3-1 6 0 6 3"/></svg>Amici<small>1 azione</small></button>
+    </div>
+    <div id="dec">
+     <button class="db ok" id="ok"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Fallo entrare</button>
+     <button class="db no" id="no"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Respingi</button>
+    </div>
+    <button id="nxt">Vai a dormire</button>
+   </div></main>
+ </div>
+ <div id="ov"><h1>No, I'm not a <u>zozzapper</u></h1>
+  <p>Sei l'unico Admin di <b>Viridi Celesti</b>. Di giorno decidi chi far entrare: hai 3 azioni per candidato (selfie, vocale, Instagram, amici).<br>Di sera scopri cosa hanno fatto nel gruppo quelli che hai accettato e quelli che hai respinto. Gli Zozzapper che lasci entrare restano e peggiorano ogni notte. Resisti 5 giorni.<br><small>Usa gli auricolari.</small></p>
+  <button id="go">Apri Whatzap</button></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),R=Math.random,pick=a=>a[Math.floor(R()*a.length)],sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const M=["Marco","Luca","Giorgio","Paolo","Davide","Enrico","Nino"],F=["Giulia","Sara","Marta","Elena","Chiara","Rosa","Anna"],SUR=["Rossi","Bianchi","Esposito","Greco","Ferri","Conti","Gallo"];
+let S,C,ctx;
+function AC(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state=="suspended")ctx.resume();return ctx}
+function tone(f,t,d,v=.15,type="sine"){const c=AC(),o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+t+d);o.connect(g).connect(c.destination);o.start(c.currentTime+t);o.stop(c.currentTime+t+d)}
+function ping(){tone(880,0,.12);tone(1320,.1,.2)}
+function noise(d,v){const c=AC(),b=c.createBuffer(1,c.sampleRate*d,c.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=(R()*2-1)*(R()<.3?1:.2);const s=c.createBufferSource(),g=c.createGain();g.gain.value=v;s.buffer=b;s.connect(g).connect(c.destination);s.start()}
+function glitch(){noise(.5,.35);tone(60,0,.6,.3,"sawtooth");tone(2400,.1,.1,.1,"square");const m=$("mon");m.classList.add("glitch");setTimeout(()=>m.classList.remove("glitch"),500)}
+function ambient(){const c=AC(),b=c.createBuffer(1,c.sampleRate*2,c.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=R()*2-1;const s=c.createBufferSource();s.buffer=b;s.loop=true;const f=c.createBiquadFilter();f.type="lowpass";f.frequency.value=380;const g=c.createGain();g.gain.value=.06;const l=c.createOscillator();l.frequency.value=.18;const lg=c.createGain();lg.gain.value=.05;l.connect(lg).connect(g.gain);s.connect(f).connect(g).connect(c.destination);s.start();l.start();setInterval(()=>{if(R()<.25)noise(.08,.05)},3000)}
+function speak(txt,pitch,rate,bad){
+ if(!window.speechSynthesis){noise(.8,.2);return}
+ const u=new SpeechSynthesisUtterance(txt);u.lang="it-IT";const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("it"));if(v)u.voice=v;
+ u.pitch=pitch;u.rate=rate;u.onend=()=>{if(bad)glitch()};speechSynthesis.cancel();speechSynthesis.speak(u);
+ if(bad){setTimeout(()=>noise(.4,.25),400);setTimeout(()=>tone(120,0,.8,.12,"sawtooth"),200)}}
+function face(p,a){a=a||{};const sk=p.skin,hc=p.hair,ex=p.ex,er=p.er,eL=er*(a.asym?1.7:1),mw=a.wide?34:p.mw;
+ let s=`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="${p.bg}"/>`;
+ s+=p.g=="f"?`<path d="M18 90V45Q18 12 50 12T82 45V90Z" fill="${hc}"/>`:`<path d="M24 45Q24 14 50 14T76 45Q60 30 24 45Z" fill="${hc}"/>`;
+ s+=`<ellipse cx="50" cy="52" rx="27" ry="33" fill="${sk}"/>`;
+ if(p.g=="f")s+=`<path d="M23 45Q50 8 77 45Q50 25 23 45Z" fill="${hc}"/>`;
+ s+=`<ellipse cx="${50-ex}" cy="${48+(a.low?5:0)}" rx="${eL}" ry="${eL*.8}" fill="#fff"/><ellipse cx="${50+ex}" cy="48" rx="${er}" ry="${er*.8}" fill="#fff"/><circle cx="${50-ex}" cy="${48+(a.low?5:0)}" r="${eL*.5}" fill="${a.eye||p.eye}"/><circle cx="${50+ex}" cy="48" r="${er*.5}" fill="${p.eye}"/>`;
+ if(a.third)s+=`<ellipse cx="50" cy="36" rx="3" ry="2.4" fill="#fff"/><circle cx="50" cy="36" r="1.3" fill="#900"/>`;
+ s+=`<path d="M${50-mw/2} 70Q50 ${a.wide?88:76} ${50+mw/2} 70" fill="${a.wide?"#fff":"none"}" stroke="#7a2f2f" stroke-width="2.2"/>`;
+ if(a.shadow)s+=`<path d="M50 20h27v60H50z" fill="#000" opacity=".4"/>`;return s+"</svg>"}
+function newP(g){return{g,skin:pick(["#f1c9a5","#d9a679","#b57d52","#8a5a3b"]),hair:pick(["#2b1b10","#111","#6a3b1a","#c9a45b","#777"]),eye:pick(["#3a2a1a","#2f5f8f","#2f6a3a"]),ex:pick([9,10,11]),er:pick([4.6,5,5.4]),mw:pick([16,18,20]),bg:pick(["#355","#533","#345","#443"])}}
+const DAYS=4,ACT=3,Q=2;
+const sty=document.createElement("style");sty.textContent=`#opts{display:none;flex-direction:column;gap:6px}#opts button{text-align:left;padding:9px 12px;border:1px solid var(--td);background:var(--p0);color:var(--t);border-radius:10px;font:inherit;font-size:13px;cursor:pointer}#opts button:hover:not(:disabled){background:var(--p2)}#opts small{color:var(--mu);font-size:11px}
+#mon.day{--p0:#0e0a03;--p1:#221808;--p2:#33250d;--ln:#5a4218;--t:#ffcf6f;--td:#b8903d;--tx:#f2e6cc;--mu:#a08a5a;--out:#463211}#mon.day .av svg,#mon.day .m svg{filter:grayscale(1) sepia(1) saturate(2.5)}.ci{cursor:pointer}`;document.head.appendChild(sty);
+const od=document.createElement("div");od.id="opts";$("foot").insertBefore(od,$("acts"));
+const CH=[
+{n:"Rosa Gallo",g:"f",s:"68 anni · pensionata",i:"Buonasera... sono Rosa. Ho trovato su facebook link per gruppo uozzap, posso entrare?",q:[["Perché vuoi entrare?","perche ho visto il link su facebook."],["Parlami di te","Ho 2 nipoti e un cane che si chiama filippo. Mio marito non c'è più, la sera resto sveglia e nn so cosa fare."],["Chi ti ha invitata?","il post su facebbok quant3 volte devo ripeterlo?."]],z:0,fr:1,b:"Nonna di 2 🧶",fol:212,po:["🍝","🧶","🐈","🌷"]},
+{n:"꧁ ᒪᑌᑕᎥᖴᗴᖇ ꧂",g:"m",s:"15 anni",i:"Mi hanno detto che qui c'è bisogno di una mano, se vuoi fammi entrare e ti aiuto nel gruppo",q:[["Perché vuoi entrare?","te l'ho detto per aiutare, però anche per conoscere nuova gente"],["Parlami di te","gioco a rocket, mi piace programmare, vado a scuola. mangio cago dormo...mi hanno pure bannato IG mi sono fatto un nuovo account"],["Chi ti ha invitato?","nessuno ho visto il qr su tiktok"]],z:0,fr:0,b:"",fol:3,po:["🔌"]},
+{n:" ᴅɪᴅᴀsᴄᴀʟɪᴄᴏ ♡",g:"f",s:"16 anni",i:"Ciao!! sono Mark,vivo a Torino ma sono di Salerno 😅",q:[["Perché vuoi entrare?"," Qui almeno si parla italiano vero. Mi manca il mare."],["Parlami di te","Studio lettere e d'estate faccio il cameriere. faccio nuoto e pallavolo"],["Cosa fai sveglio a quest'ora?","stavo scrollando su tiktok e ho visto un vostro video poi sono entrato"]],z:0,fr:0,b:"Lettere 📚 · Salerno → Torino",fol:540,po:["☕","📚","🌊","🍕","🐈","🎶"]},
+{n:"亗 ･ ϳσкєя ☬",g:"m",s:"18 anni",i:"Buonasera. Sono joker. Sono molto felice di essere qui. Sono molto felice.",q:[["Perché sei felice?","Perchè si, non serve un motivo particolare."],["Parlami di te","Sono un consulente. Aiuto le persone a fidarsi. Fidati. Sono una persona. Una persona normale."],["Cosa fai sveglio a quest'ora?","Non dormo. Non ho più bisogno di dormire. Proprio adesso mi sto bevendo un caffe"]],z:1,t:["selfie","insta"],fr:0,b:"fidati",fol:1,po:["👁️","","🕳️"]},
+{n:"Elena Greco",g:"f",s:"12 anni · infermiera",i:"Scusa l'ora, sono appena uscita dal turno di notte. Posso entrare?",q:[["Perché vuoi entrare?","Voglio parlare con persone che non siano malate. Qui mi calma."],["Parlami di te","Faccio l'infermiera in geriatria. Ho la voce stanca, lo so. Sembro un fantasma 🙂"],["Chi ti ha invitata?","La mia collega Paola, ma ora è in ferie. Non so se ti ricordi di lei."]],z:0,fr:0,b:"Turni di notte 🌙",fol:120,po:["🌙","☕","🏥","🌅"]},
+{n:"Marco Esposito",g:"m",s:"21 anni · venditore",i:"Ciao signor Admin. Anch'io ho gestito un gruppo molto grande, una volta. Mi fai entrare nel gruppo",q:[["Perché vuoi entrare?","Il mio gruppo è stato chiuso. Non per colpa mia. Qualcuno ha rovinato tutto. Succede. Percio cerco altri gruppi"],["Parlami di te","Vendo auto usate. Come hobby aiuto i gruppi a crescere. Dammi l'admin e ti darò una mano"],["Chi ti ha invitato?","Nessuno, non conosco nessuno del tuo gruppo e comunque ho tanti numeri"]],z:1,t:["friends","voice"],fr:0,b:"be good be crazy",fol:850,po:["🚗","🚗","🤝","🚗"]},
+{n:"Sara Rossi",g:"f",s:"14 anni",i:"ciao!!! ho perso il mio vecchio account, mi fai entrare con questo?? 🙏🙏",q:[["Perché vuoi entrare?","Ero già nel gruppo prima!! Ero amica di tutti. Chiedi pure, mi conoscono."],["Parlami di te","Sono Sara, 14 anni, adoro i gattini. Ho molti amici qui. Tantissimi. Tutti loro."],["Cosa fai sveglia a quest'ora?","Aspetto che dormano. Cioè... che si sveglino. Boh, mi annoio."]],z:1,t:["selfie","voice"],fr:0,b:"gattini 🐱",fol:300,po:["🐱","🐱","🍦","🌸"]},
+{n:"Davide Marini",g:"m",s:"13 anni · barista",i:"Buonasera! Sono Davide, ho il bar in piazza. Mi hanno parlato bene del gruppo.",q:[["Perché vuoi entrare?","Faccio i caffè a mezzo quartiere, voglio sentire cosa dice la gente. E magari un po' di pubblicità 😄"],["Parlami di te","Bar aperto dalle 6. Moglie, due figli e un cane. Il resto è caffè."],["Chi ti ha invitato?","Una mia cliente affezionata, la sorella di un vostro membro. Chiedete in giro."]],z:0,fr:1,b:"Bar Centrale ☕",fol:800,po:["☕","🥐","🍰","⚽","🐕","🎂"]},
+{n:"Anna Fiore",g:"f",s:"17 anni ",i:"Buonasera, sono la sorella di Giorgio, forse lo conosci. Posso entrare?",q:[["Perché vuoi entrare?","Giorgio parla sempre del gruppo. Vorrei capire con chi parla e con chi passa il tempo"],["Parlami di te","mi piace disegnare e studiare😅, di solito faccio sempre qualcosa per tenere la mente occupata, non saprei che altro dire faccio un sacco di cose"],["Chi ti ha invitata?","Diciamo che e stato Giorgio, ma non sa che sono qui. È una sorpresa. Visto che mi parla sempre del gruppo"]],z:0,fr:1,b:"self embodiment!",fol:260,po:["🍎","📖","🎨","🌳","🍝"]},
+{n:"Paolo Neri",g:"m",s:"50 anni",i:"Buonasera. Cerco compagnia. Tanta compagnia. Sono molto solo.",q:[["Perché vuoi entrare?","Cerco una ragazza, una fidanchata"],["Parlami di te","Ho 52 anni. Casa mia è piena di ritratti. Facce. Le colleziono."],["Cosa fai sveglio a quest'ora?","Guardo. La notte si vede meglio💋💋"]],z:1,t:["insta","friends"],fr:0,b:"",fol:0,po:["👁️","👁️","🦷","🕳️","","🩸"]},
+{n:"Chiara Moretti",g:"f",s:"11 anni · traduttrice",i:"Salve! Sono Chiara. Sono una persona gentile e sono un essere umano.",q:[["Perché vuoi entrare?","ho visto un video su instagram riguardo il gruppo"],["Parlami di te","studio lingue e anchesse sono al primo anno so gia paralre il francese,tedesco,spagnolo, filippino e coreano. Adesso a scuola stiamo imparando il cinese ma siamo proprio all'inizio, e per conto mio forse mi imparo anche il giapponese cosi mi guardo gli anime senza sottotitoli XD"],["Cosa fai sveglia a quest'ora?","stavo su duolingo, e poi ho visto il link di invito su un gruppo, cosi ho cliccato"]],z:1,t:["voice","selfie"],fr:0,b:"Parole 📖",fol:410,po:["📖","🌿","☕","📖"]},
+{n:"Enrico Villa",g:"m",s:"14 anni ",i:"yoyo Sono Enrico, fratello fammi entrare nel gruppo",q:[["Perché vuoi entrare?","Voglio gente con cui litigare  😂 giuro!"],["Parlami di te","fumo, spaccio, meno tutti, se mi fai incazzare zibbi ti sparo"],["Chi ti ha invitato?","Il mio amico Nando, dice che siete ok."]],z:0,fr:0,b:"Sempre allo stadio ⚽",fol:300,po:["⚽","🍺","🔥","⚽","🎉","📣"]}];
+const evBad=["ha incollato un link che nessuno ricorda di aver aperto.","scrive la stessa parola 400 volte: «dentro».","ha cambiato le foto di tre membri. Ora sono tutte uguali.","manda un vocale: solo respiro, poi il tuo nome.","ha rubato l'identità di un membro storico."];
+const eerie=["Grazie. Ora siamo vicini.","Finalmente. Ero fuori da tanto.","Grazie, Admin. Non te ne pentirai. Forse."];
+let LG=null;
+function add(t,cls="",html=false){const d=document.createElement("div");d.className="m "+cls;if(html)d.innerHTML=t;else d.textContent=t;$("chat").appendChild(d);$("chat").scrollTop=1e9;return d}
+function msg(t,cls="",html=false){if(LG)LG.push([t,cls,html]);return add(t,cls,html)}
+function render(l){$("chat").innerHTML="";l.forEach(a=>add(...a))}
+function who(c){return `<div class="av">${face(c.p)}</div><div><b>${c.n}</b><small>${c.s}${S.ph=="day"&&c.z&&c.tells&&0?"":""}</small></div>`}
+function hud(){const n=S.ph=="night";$("bs").style.width=Math.max(0,S.san)+"%";$("bc").style.width=Math.max(0,S.com)+"%";$("mem").textContent=S.base+S.mem.length;
+ $("ph").textContent=n?`Notte ${S.day} · richiesta ${Math.min(S.i+1,3)}/3`:`Giorno ${S.day}/${DAYS} · controlli`;
+ const k=n?S.q:S.act,m=n?Q:ACT;$("en").innerHTML=Array.from({length:m},(_,i)=>`<span class="${i<k?"on":""}"></span>`).join("");
+ ["a1","a2","a3","a4"].forEach((id,i)=>$(id).disabled=n||!C||S.act<=0||C.used[i])}
+function list(){let h=`<div class="ci ${S.ph=="day"&&!C?"cur":""}" ${S.ph=="day"?'onclick="showGroup()"':""}><div class="av">👥</div><div>Viridi Celesti<small>${S.base+S.mem.length} membri</small></div></div>`;
+ if(S.ph=="night")S.queue.forEach((c,i)=>{const cur=i==S.i;h+=`<div class="ci ${cur?"cur":""} ${c.st?"done":""}"><div class="av">${c.st?face(c.p):"❔"}</div><div>${c.st||cur?c.n:"Sconosciuto"}<small>${c.st?(c.st==1?"Accettato":"Respinto"):cur?"Alla porta":"In attesa"}</small></div></div>`});
+ else S.mem.forEach((c,i)=>{const u=["📸","🎤","📷","👥"].filter((_,k)=>c.used[k]).join("");h+=`<div class="ci ${C===c?"cur":""}" onclick="sel(${i})"><div class="av">${face(c.p)}</div><div>${c.n}<small>${u||"mai controllato"}</small></div></div>`});
+ $("list").innerHTML=h}
+function mode(){const n=S.ph=="night";$("opts").style.display=n?"flex":"none";$("acts").style.display=n?"none":"grid";$("dec").style.display="grid";
+ $("ok").style.display=n?"":"none";$("no").style.gridColumn=n?"":"1/3";$("nxt").style.display="none";
+ $("ok").lastChild.textContent="Fallo entrare";$("no").lastChild.textContent=n?"Respingi":"Espelli dal gruppo";$("dec").style.display=n||S.mem.length?"grid":"none"}
+function showApplicant(){C=S.queue[S.i];LG=null;mode();$("head").innerHTML=who(C);$("chat").innerHTML="";C.asked={};S.q=Q;ping();
+ add("🔔 Qualcuno bussa al gruppo «Viridi Celesti». Hai solo "+Q+" domande.","sys");add(C.i);opts();hud();list()}
+function opts(){$("opts").innerHTML=C.q.map((q,k)=>`<button ${C.asked[k]||S.q<=0?"disabled":""} onclick="ask(${k})">${q[0]}</button>`).join("")}
+async function ask(k){if(S.q<=0||C.asked[k])return;C.asked[k]=1;S.q--;add(C.q[k][0],"me");opts();hud();await sleep(800);add(C.q[k][1]);
+ if(C.z&&R()<.5){glitch();S.san-=2}else ping();hud()}
+function decide(a){C.st=a?1:2;
+ if(a){S.mem.push(C);C.nw=1;C.used={};C.log=[];add(C.z?pick(eerie):pick(["Grazie! 🙏","Grazie mille, non vi deluderò!"]),C.z?"bad":"");if(C.z)glitch()}
+ else{if(!C.z)S.com-=3;add(C.z?"...":"Ah. Va bene. Peccato.",C.z?"bad":"")}
+ add(a?"Accettato nel gruppo.":"Richiesta respinta.","sys");S.i++;list();hud();$("foot").style.pointerEvents="none";
+ setTimeout(()=>{$("foot").style.pointerEvents="";if(S.com<=0)return end(false,"La community è morta. Vieni rimosso dal ruolo di Admin.");if(S.san<=0)return end(false,"La tua sanità mentale è crollata.");S.i>=3?startDay():showApplicant()},1400)}
+$("ok").onclick=()=>{if(S.ph=="night")decide(true)};$("no").onclick=()=>S.ph=="night"?decide(false):expel();
+async function say(w,t,bad){add(`<span class="sn">~ ${w}</span>${t}`,bad?"bad":"",true);if(bad)glitch();else ping();await sleep(1500)}
+function showGroup(){if(S.ph!="day")return;C=null;LG=S.glog;render(S.glog);$("head").innerHTML=`<div class="av">👥</div><div><b>Viridi Celesti</b><small>${S.base+S.mem.length} membri</small></div>`;hud();list()}
+function sel(i){C=S.mem[i];LG=C.log;$("head").innerHTML=who(C);render(C.log);if(!C.log.length)msg("Chat privata con "+C.n+". Scegli un controllo: costa 1 azione.","sys");hud();list()}
+async function startDay(){S.ph="day";$("mon").classList.add("day");S.act=ACT;C=null;S.glog=[];LG=null;mode();$("chat").innerHTML="";S.q=0;
+ $("head").innerHTML=`<div class="av">👥</div><div><b>Viridi Celesti</b><small>mattina</small></div>`;hud();list();
+ add("☀ Giorno "+S.day+". Il gruppo si sveglia.","sys");await sleep(1000);let ds=0,dc=0;
+ for(const m of S.mem.filter(m=>m.nw&&!m.z)){m.nw=0;dc+=4;await say(m.n,pick(["Ciao a tutti, grazie per avermi accettato! 🎉","Buongiorno gruppo! ☕"]),0)}
+ for(const m of S.mem.filter(m=>m.z)){m.nw=0;ds-=3;await say(m.n,m.n.split(" ")[0]+" "+pick(evBad),1);
+  const hs=S.mem.filter(x=>!x.z);if(hs.length){const h=pick(hs);S.mem.splice(S.mem.indexOf(h),1);dc-=5;add(h.n+" ha lasciato il gruppo.","sys bad")}else{dc-=4;S.base--;add("Un vecchio membro ha lasciato il gruppo.","sys bad")}await sleep(900)}
+ S.san=Math.min(100,S.san+ds);S.com=Math.min(100,S.com+dc);hud();list();
+ add(`Mattina: sanità ${ds}, community ${dc>=0?"+":""}${dc}.`+(S.mem.length?" Scegli un membro dalla lista per controllarlo. Hai "+S.act+" azioni per tutto il giorno.":" Nessun nuovo membro da controllare."),"sys");
+ S.glog.push(["(fine eventi del mattino)","sys",0]);
+ if(S.san<=0)return end(false,"La tua sanità mentale è crollata.");if(S.com<=0)return end(false,"La community è morta. Vieni rimosso dal ruolo di Admin.");
+ $("nxt").style.display="block";$("nxt").textContent=S.day>=DAYS?"Aspetta l'alba":"Vai a dormire";mode();$("nxt").style.display="block"}
+$("nxt").onclick=()=>{if(S.day>=DAYS)return end(true);S.day++;$("mon").classList.remove("day");S.ph="night";S.i=0;S.queue=S.pool.splice(0,3);showApplicant()};
+function expel(){if(!C)return;const z=C.z;S.mem.splice(S.mem.indexOf(C),1);
+ if(z){S.san=Math.min(100,S.san+3);S.glog.push([`${C.n} era uno Zozzapper. Espulso.`,"sys",0])}else{S.com-=8;S.base-=2;S.glog.push([`${C.n} era una persona vera. Se ne va furioso e porta via due amici.`,"sys bad",0])}
+ const e=C;C=null;showGroup();hud();list();if(S.com<=0)end(false,"La community è morta. Vieni rimosso dal ruolo di Admin.")}
+function use(i){C.used[i]=1;S.act--;hud();list()}
+const pm=(t,c,h)=>msg(t,c,h);
+$("a1").onclick=()=>{if(!C)return;const c=C;use(0);pm("Mandami un selfie fatto adesso 📸","me");ping();
+ setTimeout(()=>{const t=c.t&&c.t.includes("selfie");t?glitch():ping();pm(face(c.p,t?c.anom:null),"",true);if(t){S.san-=3;hud()}},700)};
+$("a2").onclick=()=>{if(!C)return;const c=C;use(1);pm("Mandami un vocale: «Sono un essere umano, fammi entrare»","me");ping();
+ setTimeout(()=>{const t=c.t&&c.t.includes("voice");let ph="Sono un essere umano, fammi entrare",pitch=c.g=="f"?1.7:.8,rate=1;
+  if(t){if(c.voiceT=="pitch"){pitch=.1;rate=.55}else if(c.voiceT=="phrase")ph="Apri la porta, ho fame";else pitch=c.g=="f"?.1:2}
+  const d=pm("","");const h=document.createElement("div");h.className="vm";h.innerHTML=`<span>▶</span><em></em><small>0:0${2+Math.floor(R()*3)}</small>`;(d||document.querySelector("#chat .m:last-child")).appendChild(h);
+  const play=()=>speak(ph,pitch,rate,t);h.onclick=play;play();if(t){S.san-=3;hud()}if(!window.speechSynthesis)pm("(voce: "+(t?"distorta, innaturale":"normale")+")","sys")},700)};
+$("a3").onclick=()=>{if(!C)return;const c=C;use(2);pm("Mandami il tuo Instagram","me");ping();
+ setTimeout(()=>{const t=c.t&&c.t.includes("insta"),u="@"+c.n.toLowerCase().replace(" ","."),fol=t?pick([0,1]):c.fol,posts=c.po,n=t?posts.filter(x=>x).length:posts.length*pick([3,7,12]),fg=t?pick([0,666,1]):Math.max(8,Math.floor(fol*(.4+R()))),bio=t?pick(["","fammi entrare","▲ ▲ ▲","sono già dentro"]):c.b,story=t?pick(["△ ☉ ⛧ ∴","👁️👁️👁️ 000000"]):(fol<10?"nessuna storia":pick(["🌞 buongiorno!","🍕 pranzo","nessuna storia"])),av=t&&R()<.6?`<div class="ia">👁️</div>`:`<div class="ia">${face(c.p)}</div>`;
+  pm(`<div class="ig2"><div class="tb"><span>‹</span><span>${u}</span><span>⋯</span></div><div class="hd">${av}<div class="st"><div><b>${n}</b>post</div><div><b>${fol}</b>follower</div><div><b>${fg}</b>seguiti</div></div></div><div class="bi"><b>${c.n}</b><br>${bio}<br><span style="color:var(--mu)">Storia: ${story}</span></div><div class="bt"><span class="f">Segui</span><span>Messaggio</span></div><div class="tabs"><span class="on">▦</span><span>◫</span></div><div class="gr">${(t?["🕳️","👁️","🕳️","","👁️","🩸"]:posts).map(x=>`<div style="background:hsl(${Math.floor(R()*360)} 25% 12%)">${x}</div>`).join("")}</div></div>`,"igm",true);
+  if(t){glitch();S.san-=3;hud()}},700)};
+$("a4").onclick=()=>{if(!C)return;const c=C;use(3);pm("📩 Inoltrato agli Amici Fedeli: «Riconoscete questo numero/faccia?»","me");ping();
+ setTimeout(()=>{const t=c.t&&c.t.includes("friends");let a;
+  if(t)a="Gino: NON FARLO ENTRARE. L'ho visto ieri sera rubare un gruppo.";
+  else if(c.fr)a="Rita: Sì, conosco "+c.n.split(" ")[0]+" nella vita reale, è a posto!";
+  else a=pick(["Tano: Mai visto... non posso aiutarti.","Pia: Mai visto... non posso aiutarti."]);
+  ping();pm(a,t?"bad":"");if(t){S.san-=2;hud()}},900)};
+function end(w,t){$("ov").style.display="flex";const z=S.mem.filter(m=>m.z).length;
+ $("ov").innerHTML=`<h1>${w?"Hai vinto":"<u>GAME OVER</u>"}</h1><p>${w?`Hai protetto Viridi Celesti per ${DAYS} giorni. Sanità ${Math.round(S.san)}%, community ${Math.round(S.com)}%, ${S.base+S.mem.length} membri. Zozzapper rimasti nel gruppo: ${z}.`:t}</p><button onclick="start()">${w?"Rigioca":"Riprova"}</button>`;if(!w)glitch()}
+function start(){const pool=CH.map(c=>({...c,p:newP(c.g),anom:pick([{asym:1},{third:1},{wide:1},{eye:"#b00",low:1},{shadow:1,asym:1}]),voiceT:pick(["pitch","phrase","gender"]),used:{},asked:{},st:0,tells:c.t})).sort(()=>R()-.5);
+ S={san:100,com:60,day:1,i:0,ph:"night",base:100,mem:[],q:Q,act:ACT,pool,queue:pool.splice(0,3),glog:[]};C=null;$("ov").style.display="none";$("mon").classList.remove("day");showApplicant()}
+$("ov").querySelector("p").innerHTML="Sei l'unico Admin di <b>Viridi Celesti</b>.<br><b>Di notte</b> gli sconosciuti bussano: parla con loro (solo 2 domande a testa), scopri la loro storia e decidi se farli entrare.<br><b>Di giorno</b> hai solo 3 controlli (selfie, vocale, Instagram, amici) da spendere sui membri accettati. Ogni mattina ogni Zozzapper presente fa uscire un membro normale e ti consuma la sanità. Puoi espellere, ma se sbagli la community ti odia. Resisti "+DAYS+" giorni.<br><small>Usa gli auricolari.</small>";
+$("go").onclick=()=>{AC();ambient();start()};
+</script></body></html>
