@@ -50,7 +50,7 @@ h2{font-size:16px;margin:0 0 12px}
 .grid{display:grid;gap:10px}
 #cards{grid-template-columns:repeat(3,1fr)}
 .card{min-height:100px;border-radius:16px;background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700}
-.card span{font-size:34px;line-height:1}
+.card img{width:80px;height:80px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.05)}
 #swatches{grid-template-columns:repeat(4,1fr)}
 .sw{height:54px;border-radius:14px;border:3px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
 .sw.on{border-color:#fff}
@@ -115,7 +115,6 @@ const assetPaths = {
   Bed: "public/furniture/Bed_02.glb"
 };
 const NAMES = { Chair: 'Sedia', Table: 'Tavolo', Bed: 'Letto' };
-const ICONS = { Chair: '🪑', Table: '🍽️', Bed: '🛏️' };
 const WALLS = ['#ffffff', '#f3e9dc', '#cfe3f0', '#d9ead3', '#f4cccc', '#e6d5f0', '#3d4a5c', '#2b2b2b'];
 const BOUNDS = { minX: -4.8, maxX: 4.8, minZ: -4.8, maxZ: 4.8 };
 
@@ -245,10 +244,11 @@ function init() {
   Object.keys(assetPaths).forEach(type => {
     const b = document.createElement('button');
     b.className = 'card';
-    b.innerHTML = `<span>${ICONS[type]}</span>${NAMES[type]}`;
+    b.innerHTML = `<img alt="" data-type="${type}">${NAMES[type]}`;
     b.onclick = () => { closeSheet(); spawnItem(type, 0, 0, 0, null, true); };
     $('cards').append(b);
   });
+  makeThumbs();
 
   $('openAdd').onclick = () => openSheet('add');
   $('openWall').onclick = () => openSheet('wall');
@@ -274,6 +274,36 @@ function init() {
 
   setView(false);
   animate();
+}
+
+/* ---------- Real previews of the .glb models ---------- */
+function makeThumbs() {
+  const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  r.setPixelRatio(1); r.setSize(256, 256);
+  const sc = new THREE.Scene();
+  sc.add(new THREE.AmbientLight(0xffffff, 0.9));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+  dl.position.set(3, 6, 4); sc.add(dl);
+  const cam = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+  const loader = new THREE.GLTFLoader();
+  const jobs = Object.keys(assetPaths).map(type => new Promise(res => {
+    loader.load(assetPaths[type], g => {
+      const obj = g.scene;
+      sc.add(obj);
+      const box = new THREE.Box3().setFromObject(obj);
+      const c = box.getCenter(new THREE.Vector3());
+      const dist = box.getSize(new THREE.Vector3()).length() / 2 / Math.tan(THREE.MathUtils.degToRad(17.5)) * 1.05;
+      cam.near = dist / 100; cam.far = dist * 10; cam.updateProjectionMatrix();
+      cam.position.copy(c).add(new THREE.Vector3(1, 0.8, 1).normalize().multiplyScalar(dist));
+      cam.lookAt(c);
+      r.render(sc, cam);
+      const img = document.querySelector(`img[data-type="${type}"]`);
+      if (img) img.src = r.domElement.toDataURL('image/png');
+      sc.remove(obj);
+      res();
+    }, undefined, () => res());
+  }));
+  Promise.all(jobs).then(() => { r.dispose(); r.forceContextLoss(); });
 }
 
 /* ---------- Furniture ---------- */
