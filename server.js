@@ -89,7 +89,6 @@ function newDeck() {
     for (const s of SUITS) {
         for (const r of RANKS) deck.push({ r, s });
     }
-    // Fisher-Yates
     for (let i = deck.length - 1; i > 0; i--) {
         const j = crypto.randomInt(0, i + 1);
         [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -189,7 +188,7 @@ function settle(game, userDoc) {
         userDoc.bjWins = (userDoc.bjWins || 0) + 1;
     } else if (isBlackjack(game.player) && !isBlackjack(game.dealer)) {
         outcome = 'win';
-        payout = Math.floor(game.bet * 2.5); // 3:2
+        payout = Math.floor(game.bet * 2.5);
         message = `Blackjack! Vinci ${payout - game.bet} (3:2).`;
         userDoc.bjWins = (userDoc.bjWins || 0) + 1;
     } else if (isBlackjack(game.dealer) && !isBlackjack(game.player)) {
@@ -207,7 +206,7 @@ function settle(game, userDoc) {
         userDoc.bjLosses = (userDoc.bjLosses || 0) + 1;
     } else {
         outcome = 'push';
-        payout = game.bet; // restituisce la puntata
+        payout = game.bet;
         message = `Pareggio ${pVal}. Puntata restituita.`;
         userDoc.bjPushes = (userDoc.bjPushes || 0) + 1;
     }
@@ -249,15 +248,8 @@ app.get('/api/blackjack/state', authShop, async (req, res) => {
         res.set('Cache-Control', 'no-store');
         res.json({
             success: true,
-            user: {
-                limit: userDoc.limit || 0,
-                credito: userDoc.credito || 0
-            },
-            stats: {
-                wins: userDoc.bjWins || 0,
-                losses: userDoc.bjLosses || 0,
-                pushes: userDoc.bjPushes || 0
-            },
+            user: { limit: userDoc.limit || 0, credito: userDoc.credito || 0 },
+            stats: { wins: userDoc.bjWins || 0, losses: userDoc.bjLosses || 0, pushes: userDoc.bjPushes || 0 },
             game: publicGame(game)
         });
     } catch (error) {
@@ -269,28 +261,18 @@ app.get('/api/blackjack/state', authShop, async (req, res) => {
 app.post('/api/blackjack/start', authShop, async (req, res) => {
     try {
         const bet = Math.floor(Number(req.body?.bet) || 0);
-        if (bet < 10) {
-            return res.status(400).json({ success: false, message: 'Puntata minima: 10.' });
-        }
+        if (bet < 10) return res.status(400).json({ success: false, message: 'Puntata minima: 10.' });
 
         await connect();
         const db = mongoose.connection.db;
 
         const existing = await getActiveGame(db, req.userJid);
-        if (existing) {
-            return res.status(400).json({
-                success: false,
-                message: 'Hai già una partita in corso. Finiscila prima di iniziarne una nuova.'
-            });
-        }
+        if (existing) return res.status(400).json({ success: false, message: 'Hai già una partita in corso.' });
 
         const userDoc = await getShopUser(db, req.userJid);
-        if ((userDoc.limit || 0) < bet) {
-            return res.status(400).json({ success: false, message: 'Saldo insufficiente.' });
-        }
+        if ((userDoc.limit || 0) < bet) return res.status(400).json({ success: false, message: 'Saldo insufficiente.' });
 
         userDoc.limit -= bet;
-
         const deck = newDeck();
         const player = [deck.pop(), deck.pop()];
         const dealer = [deck.pop(), deck.pop()];
@@ -308,10 +290,7 @@ app.post('/api/blackjack/start', authShop, async (req, res) => {
             updatedAt: new Date()
         };
 
-        const pBJ = isBlackjack(player);
-        const dBJ = isBlackjack(dealer);
-
-        if (pBJ || dBJ) {
+        if (isBlackjack(player) || isBlackjack(dealer)) {
             game = settle(game, userDoc);
             game.updatedAt = new Date();
         }
@@ -323,43 +302,30 @@ app.post('/api/blackjack/start', authShop, async (req, res) => {
         res.json({
             success: true,
             user: { limit: userDoc.limit || 0, credito: userDoc.credito || 0 },
-            stats: {
-                wins: userDoc.bjWins || 0,
-                losses: userDoc.bjLosses || 0,
-                pushes: userDoc.bjPushes || 0
-            },
+            stats: { wins: userDoc.bjWins || 0, losses: userDoc.bjLosses || 0, pushes: userDoc.bjPushes || 0 },
             game: publicGame(game)
         });
     } catch (error) {
         console.error('[API blackjack start]', error.message);
-        res.status(500).json({ success: false, message: 'Errore durante l\'avvio della partita.' });
+        res.status(500).json({ success: false, message: 'Errore durante l\'avvio.' });
     }
 });
 
 app.post('/api/blackjack/action', authShop, async (req, res) => {
     try {
         const action = String(req.body?.action || '').toLowerCase();
-        if (!['hit', 'stand', 'double'].includes(action)) {
-            return res.status(400).json({ success: false, message: 'Azione non valida.' });
-        }
+        if (!['hit', 'stand', 'double'].includes(action)) return res.status(400).json({ success: false, message: 'Azione non valida.' });
 
         await connect();
         const db = mongoose.connection.db;
-
         let game = await getActiveGame(db, req.userJid);
-        if (!game || game.status !== 'player_turn') {
-            return res.status(400).json({ success: false, message: 'Nessuna partita attiva in cui puoi agire.' });
-        }
+        if (!game || game.status !== 'player_turn') return res.status(400).json({ success: false, message: 'Nessuna partita attiva.' });
 
         const userDoc = await getShopUser(db, req.userJid);
 
         if (action === 'double') {
-            if (game.player.length !== 2 || game.doubled) {
-                return res.status(400).json({ success: false, message: 'Non puoi raddoppiare ora.' });
-            }
-            if ((userDoc.limit || 0) < game.bet) {
-                return res.status(400).json({ success: false, message: 'Saldo insufficiente per raddoppiare.' });
-            }
+            if (game.player.length !== 2 || game.doubled) return res.status(400).json({ success: false, message: 'Non puoi raddoppiare ora.' });
+            if ((userDoc.limit || 0) < game.bet) return res.status(400).json({ success: false, message: 'Saldo insufficiente.' });
             userDoc.limit -= game.bet;
             game.bet *= 2;
             game.doubled = true;
@@ -372,9 +338,7 @@ app.post('/api/blackjack/action', authShop, async (req, res) => {
             }
         } else if (action === 'hit') {
             game.player.push(game.deck.pop());
-            if (handValue(game.player) > 21) {
-                game = settle(game, userDoc);
-            }
+            if (handValue(game.player) > 21) game = settle(game, userDoc);
         } else if (action === 'stand') {
             game = dealerPlay(game);
             game = settle(game, userDoc);
@@ -388,11 +352,7 @@ app.post('/api/blackjack/action', authShop, async (req, res) => {
         res.json({
             success: true,
             user: { limit: userDoc.limit || 0, credito: userDoc.credito || 0 },
-            stats: {
-                wins: userDoc.bjWins || 0,
-                losses: userDoc.bjLosses || 0,
-                pushes: userDoc.bjPushes || 0
-            },
+            stats: { wins: userDoc.bjWins || 0, losses: userDoc.bjLosses || 0, pushes: userDoc.bjPushes || 0 },
             game: publicGame(game)
         });
     } catch (error) {
@@ -408,57 +368,45 @@ app.get('/api/shop/state', authShop, async (req, res) => {
         await connect();
         const db = mongoose.connection.db;
         const shopmeta = db.collection('shopmeta');
-
         const catalogDoc = await shopmeta.findOne({ _id: 'catalog' });
         const userDoc = await shopmeta.findOne({ _id: 'user:' + req.userJid });
 
-        if (!catalogDoc) {
-            return res.status(500).json({ success: false, message: 'Catalogo shop non ancora pronto. Riprova tra poco.' });
-        }
+        if (!catalogDoc) return res.status(500).json({ success: false, message: 'Catalogo non pronto.' });
 
         res.set('Cache-Control', 'no-store');
         res.json({
             success: true,
             catalog: catalogDoc.categories || [],
-            user: userDoc ? {
-                limit: userDoc.limit || 0,
-                credito: userDoc.credito || 0,
-                casa: userDoc.casa || null,
-                scudoMs: userDoc.scudoMs || 0
-            } : { limit: 0, credito: 0, casa: null, scudoMs: 0 },
+            user: userDoc ? { limit: userDoc.limit || 0, credito: userDoc.credito || 0, casa: userDoc.casa || null, scudoMs: userDoc.scudoMs || 0 } : { limit: 0, credito: 0, casa: null, scudoMs: 0 },
             inventory: userDoc?.inventory || {}
         });
     } catch (error) {
         console.error('[API shop state]', error.message);
-        res.status(500).json({ success: false, message: 'Errore di comunicazione col database.' });
+        res.status(500).json({ success: false, message: 'Errore database.' });
     }
 });
 
 app.post('/api/shop/checkout', authShop, async (req, res) => {
     try {
         const { type, pay, items } = req.body || {};
-        if (!type || !Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ success: false, message: 'Dati ordine non validi.' });
-        }
+        if (!type || !Array.isArray(items) || items.length === 0) return res.status(400).json({ success: false, message: 'Ordine non valido.' });
 
         await connect();
         const db = mongoose.connection.db;
         const shoporders = db.collection('shoporders');
 
-        const newOrder = {
+        const result = await shoporders.insertOne({
             jid: req.userJid,
             type,
             pay: pay === 'mixed' ? 'mixed' : 'wallet',
             items,
             status: 'pending',
             createdAt: new Date()
-        };
-
-        const result = await shoporders.insertOne(newOrder);
+        });
         res.json({ success: true, orderId: result.insertedId.toString() });
     } catch (error) {
         console.error('[API shop checkout]', error.message);
-        res.status(500).json({ success: false, message: 'Errore durante la registrazione dell\'ordine.' });
+        res.status(500).json({ success: false, message: 'Errore ordine.' });
     }
 });
 
@@ -471,49 +419,36 @@ app.get('/api/shop/order/:id', authShop, async (req, res) => {
         const shopmeta = db.collection('shopmeta');
 
         let objectId;
-        try {
-            objectId = new mongoose.Types.ObjectId(orderId);
-        } catch {
-            return res.status(400).json({ success: false, message: 'ID ordine non valido.' });
-        }
+        try { objectId = new mongoose.Types.ObjectId(orderId); } catch { return res.status(400).json({ success: false, message: 'ID non valido.' }); }
 
         const order = await shoporders.findOne({ _id: objectId });
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Ordine non trovato.' });
-        }
+        if (!order) return res.status(404).json({ success: false, message: 'Ordine non trovato.' });
 
-        const response = {
-            success: true,
-            status: order.status,
-            message: order.message || ''
-        };
-
+        const response = { success: true, status: order.status, message: order.message || '' };
         if (order.status === 'done' || order.status === 'rejected') {
             const userDoc = await shopmeta.findOne({ _id: 'user:' + req.userJid });
             if (userDoc) {
-                response.user = {
-                    limit: userDoc.limit || 0,
-                    credito: userDoc.credito || 0,
-                    casa: userDoc.casa || null,
-                    scudoMs: userDoc.scudoMs || 0
-                };
+                response.user = { limit: userDoc.limit || 0, credito: userDoc.credito || 0, casa: userDoc.casa || null, scudoMs: userDoc.scudoMs || 0 };
                 response.inventory = userDoc.inventory || {};
             }
         }
-
         res.json(response);
     } catch (error) {
         console.error('[API shop order]', error.message);
-        res.status(500).json({ success: false, message: 'Errore durante la verifica dell\'ordine.' });
+        res.status(500).json({ success: false, message: 'Errore verifica ordine.' });
     }
 });
 
-// ==================== ROTTE API CASA 3D (Compatibili con la tua casa.html) ====================
+// ==================== ROTTE API CASA 3D (Basate su numero di telefono) ====================
 
-app.get('/api/house/:userId', async (req, res) => {
+app.get('/api/house/:numero', async (req, res) => {
     try {
-        const userId = req.params.userId || 'easterbone';
-        const jid = userId.includes('@') ? userId : userId + '@s.whatsapp.net';
+        const numero = req.params.numero.replace(/[^0-9]/g, '');
+        if (numero.length < 5 || numero.length > 20) {
+            return res.status(400).json({ success: false, message: 'Numero non valido.' });
+        }
+        const jid = numero + '@s.whatsapp.net';
+
         await connect();
         const db = mongoose.connection.db;
         const userDoc = await getShopUser(db, jid);
@@ -531,9 +466,12 @@ app.get('/api/house/:userId', async (req, res) => {
 
 app.post('/api/house/save', async (req, res) => {
     try {
-        const { userId, houseType, furniture } = req.body || {};
-        const targetUser = userId || 'easterbone';
-        const jid = targetUser.includes('@') ? targetUser : targetUser + '@s.whatsapp.net';
+        const { numero, houseType, furniture } = req.body || {};
+        const cleanNumero = String(numero || '').replace(/[^0-9]/g, '');
+        if (cleanNumero.length < 5 || cleanNumero.length > 20) {
+            return res.status(400).json({ success: false, message: 'Numero non valido.' });
+        }
+        const jid = cleanNumero + '@s.whatsapp.net';
 
         await connect();
         const db = mongoose.connection.db;
@@ -557,7 +495,7 @@ app.post('/api/house/save', async (req, res) => {
         res.json({ success: true, message: 'Casa salvata con successo!', house: userDoc.casa });
     } catch (error) {
         console.error('[API house save]', error.message);
-        res.status(500).json({ success: false, message: 'Errore durante il salvataggio della casa.' });
+        res.status(500).json({ success: false, message: 'Errore durante il salvataggio.' });
     }
 });
 
@@ -578,7 +516,7 @@ app.get('/api/profilo/:numero', async (req, res) => {
         const user = users[jid];
 
         if (!user || typeof user !== 'object') {
-            return res.status(404).json({ success: false, message: 'Utente non trovato. Hai mai interagito con il bot?' });
+            return res.status(404).json({ success: false, message: 'Utente non trovato.' });
         }
 
         const partnerRaw = str(user.partner);
@@ -640,13 +578,13 @@ app.get('/api/profilo/:numero', async (req, res) => {
         });
     } catch (error) {
         console.error('[API profilo]', error.message);
-        res.status(500).json({ success: false, message: 'Errore di comunicazione col database.' });
+        res.status(500).json({ success: false, message: 'Errore database.' });
     }
 });
 
-
-// Servizio file statici
+// Servizio file statici e rotte dinamiche
 app.get('/profilo/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'profilo.html')));
+app.get('/casa/:numero', (req, res) => res.sendFile(path.join(__dirname, 'public', 'casa.html')));
 app.get('/blackjack', (req, res) => res.sendFile(path.join(__dirname, 'public', 'blackjack.html')));
 app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'public', 'shop.html')));
 app.get('/casa', (req, res) => res.sendFile(path.join(__dirname, 'public', 'casa.html')));
