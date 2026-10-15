@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phishy Home - Arreda la tua Casa</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; background: #111; color: #fff; }
+        body { margin: 0; overflow: hidden; font-family: sans-serif; background: #111; color: #fff; touch-action: none; }
         #ui {
             position: absolute; top: 10px; left: 10px; z-index: 10;
             background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px;
@@ -29,7 +29,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
 </head>
 <body>
     <div id="ui">
@@ -50,7 +49,7 @@
     </div>
 
     <div id="instructions">
-        💡 <b>Comandi:</b> Tasto destro/Shift + trascina per spostarti. Tasto sinistro per ruotare o selezionare mobili.
+        💡 <b>Comandi:</b> Tieni premuto e trascina un oggetto per muoverlo sul pavimento. Usa due dita o il tasto destro per ruotare la visuale.
     </div>
 
     <script>
@@ -67,11 +66,15 @@
         }
         numero = numero.replace(/[^0-9]/g, '');
 
-        let scene, camera, renderer, controls, transformControls;
+        let scene, camera, renderer, controls;
         const placedObjects = [];
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let roomBounds;
+        
+        let selectedObject = null;
+        let isDragging = false;
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
         let lastValidPosition = new THREE.Vector3();
         let lastValidRotation = 0;
 
@@ -95,38 +98,12 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            // Configurazione OrbitControls per movimento, zoom e rotazione liberi
+            // OrbitControls per la telecamera
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.enablePan = true;
             controls.enableRotate = true;
             controls.enableZoom = true;
-
-            // TransformControls per muovere gli oggetti
-            transformControls = new THREE.TransformControls(camera, renderer.domElement);
-            transformControls.size = 0.8;
-            transformControls.showY = false; // Blocca altezza sul pavimento
-            scene.add(transformControls);
-
-            transformControls.addEventListener('dragging-changed', (event) => {
-                controls.enabled = !event.value;
-                if (event.value && transformControls.object) {
-                    lastValidPosition.copy(transformControls.object.position);
-                    lastValidRotation = transformControls.object.rotation.y;
-                } else if (!event.value && transformControls.object) {
-                    const obj = transformControls.object;
-                    const activeItem = placedObjects.find(i => i.mesh === obj);
-                    if (activeItem) {
-                        clampToBounds(obj, activeItem.box);
-                        if (checkObjectCollisions(activeItem)) {
-                            alert("⚠️ Spazio occupato da un altro oggetto!");
-                            obj.position.copy(lastValidPosition);
-                            obj.rotation.y = lastValidRotation;
-                            activeItem.box.setFromObject(obj);
-                        }
-                    }
-                }
-            });
 
             // Luci
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -142,7 +119,7 @@
             const floorTexture = textureLoader.load('furnitures/pavimento.png', (texture) => {
                 texture.wrapS = THREE.RepeatWrapping;
                 texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(4, 4); // Regola qui quante volte ripetere la texture sul pavimento
+                texture.repeat.set(4, 4);
             });
 
             const floorMat = new THREE.MeshStandardMaterial({ 
@@ -157,7 +134,10 @@
 
             roomBounds = { minX: -5, maxX: 5, minZ: -5, maxZ: 5 };
 
+            // Eventi di puntamento per il trascinamento diretto (Mouse e Touch)
             window.addEventListener('pointerdown', onPointerDown);
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
 
             // Pulsanti UI per la gestione della telecamera
             document.getElementById('topViewBtn').addEventListener('click', () => {
@@ -178,18 +158,18 @@
             });
 
             document.getElementById('rotateBtn').addEventListener('click', () => {
-                if (transformControls.object) {
-                    lastValidPosition.copy(transformControls.object.position);
-                    lastValidRotation = transformControls.object.rotation.y;
+                if (selectedObject) {
+                    lastValidPosition.copy(selectedObject.position);
+                    lastValidRotation = selectedObject.rotation.y;
                     
-                    transformControls.object.rotation.y += Math.PI / 2;
+                    selectedObject.rotation.y += Math.PI / 2;
                     
-                    const activeItem = placedObjects.find(i => i.mesh === transformControls.object);
+                    const activeItem = placedObjects.find(i => i.mesh === selectedObject);
                     if (activeItem) {
-                        clampToBounds(transformControls.object, activeItem.box);
+                        clampToBounds(selectedObject, activeItem.box);
                         if (checkObjectCollisions(activeItem)) {
-                            transformControls.object.rotation.y = lastValidRotation;
-                            clampToBounds(transformControls.object, activeItem.box);
+                            selectedObject.rotation.y = lastValidRotation;
+                            clampToBounds(selectedObject, activeItem.box);
                             alert("⚠️ Rotazione non consentita: collisione con un altro oggetto!");
                         }
                     }
@@ -253,7 +233,7 @@
                 placedObjects.push(itemData);
 
                 if (autoSelect) {
-                    transformControls.attach(obj);
+                    selectedObject = obj;
                 }
             }, undefined, (error) => {
                 console.error("Errore caricamento modello glb:", error);
@@ -276,7 +256,56 @@
                 while (clickedRoot.parent && clickedRoot.parent !== scene) {
                     clickedRoot = clickedRoot.parent;
                 }
-                transformControls.attach(clickedRoot);
+                selectedObject = clickedRoot;
+                isDragging = true;
+                controls.enabled = false; // Disabilita la camera mentre trascini l'oggetto
+
+                const activeItem = placedObjects.find(i => i.mesh === selectedObject);
+                if (activeItem) {
+                    lastValidPosition.copy(selectedObject.position);
+                    lastValidRotation = selectedObject.rotation.y;
+                }
+            }
+        }
+
+        function onPointerMove(event) {
+            if (!isDragging || !selectedObject) return;
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const targetPos = new THREE.Vector3();
+            raycaster.ray.intersectPlane(dragPlane, targetPos);
+
+            if (targetPos) {
+                selectedObject.position.x = targetPos.x;
+                selectedObject.position.z = targetPos.z;
+                selectedObject.position.y = 0;
+
+                const activeItem = placedObjects.find(i => i.mesh === selectedObject);
+                if (activeItem) {
+                    clampToBounds(selectedObject, activeItem.box);
+                }
+            }
+        }
+
+        function onPointerUp(event) {
+            if (!isDragging) return;
+            isDragging = false;
+            controls.enabled = true; // Riabilita la telecamera
+
+            if (selectedObject) {
+                const activeItem = placedObjects.find(i => i.mesh === selectedObject);
+                if (activeItem) {
+                    activeItem.box.setFromObject(selectedObject);
+                    if (checkObjectCollisions(activeItem)) {
+                        alert("⚠️ Spazio occupato da un altro oggetto!");
+                        selectedObject.position.copy(lastValidPosition);
+                        selectedObject.rotation.y = lastValidRotation;
+                        activeItem.box.setFromObject(selectedObject);
+                    }
+                }
             }
         }
 
@@ -318,4 +347,33 @@
             }));
 
             try {
-                const res = await fetch
+                const res = await fetch(`${API_BASE_URL}/api/house/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numero, houseType: 'monolocale', furniture: furnitureData })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Casa salvata con successo nel database!");
+                } else {
+                    alert("Errore durante il salvataggio: " + (data.message || ''));
+                }
+            } catch (err) {
+                console.error("Errore di rete:", err);
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
