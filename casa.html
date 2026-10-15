@@ -49,8 +49,8 @@ body.sel #selbar{display:flex}
 h2{font-size:16px;margin:0 0 12px}
 .grid{display:grid;gap:10px}
 #cards{grid-template-columns:repeat(3,1fr)}
-.card{min-height:100px;border-radius:16px;background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700}
-.card img{width:80px;height:80px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.05)}
+.card{min-height:100px;border-radius:16px;background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700;text-align:center;padding:8px}
+.card span{font-size:30px;line-height:1}
 #swatches{grid-template-columns:repeat(4,1fr)}
 .sw{height:54px;border-radius:14px;border:3px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
 .sw.on{border-color:#fff}
@@ -110,11 +110,118 @@ if (!numero) numero = prompt("Inserisci il tuo numero di telefono (es. 393331234
 numero = numero.replace(/[^0-9]/g, '');
 
 const assetPaths = {
-  Chair: "public/furniture/Chair_17.glb",
-  Table: "public/furniture/Work_Table_06.glb",
-  Bed: "public/furniture/Bed_02.glb"
+  Armchair_02: "public/furniture/Armchair_02.glb",
+  Armchair_18: "public/furniture/Armchair_18.glb",
+  Bath_03: "public/furniture/Bath_03.glb",
+  Bed_02: "public/furniture/Bed_02.glb",
+  Bed_07: "public/furniture/Bed_07.glb",
+  Book_03: "public/furniture/Book_03.glb",
+  Book_08: "public/furniture/Book_08.glb",
+  Chair_17: "public/furniture/Chair_17.glb",
+  Chair_PC_04: "public/furniture/Chair_PC_04.glb",
+  Clock_03: "public/furniture/Clock_03.glb",
+  Closet_01: "public/furniture/Closet_01.glb",
+  Closet_02: "public/furniture/Closet_02.glb",
+  Coffee_Table_03: "public/furniture/Coffee_Table_03.glb",
+  Computer_01: "public/furniture/Computer_01.glb",
+  Couch_08: "public/furniture/Couch_08.glb",
+  Couch_11: "public/furniture/Couch_11.glb",
+  Cutting_board_02: "public/furniture/Cutting_board_02.glb",
+  ExerciseBike_01: "public/furniture/ExerciseBike_01.glb",
+  Fridge_01: "public/furniture/Fridge_01.glb",
+  GameConsole_01: "public/furniture/GameConsole_01.glb",
+  Guitar_01: "public/furniture/Guitar_01.glb",
+  Kitchen_D_01: "public/furniture/Kitchen_D_01.glb",
+  Kitchen_D_06: "public/furniture/Kitchen_D_06.glb",
+  Kitchen_D_08: "public/furniture/Kitchen_D_08.glb",
+  Kitchen_D_09: "public/furniture/Kitchen_D_09.glb",
+  Kitchen_D_10: "public/furniture/Kitchen_D_10.glb",
+  Kitchen_Table_09: "public/furniture/Kitchen_Table_09.glb",
+  Light_05: "public/furniture/Light_05.glb",
+  Microwave_01: "public/furniture/Microwave_01.glb",
+  Mixer_08: "public/furniture/Mixer_08.glb",
+  Nightstand_02: "public/furniture/Nightstand_02.glb",
+  Paper_01: "public/furniture/Paper_01.glb",
+  Paper_02: "public/furniture/Paper_02.glb",
+  Picture_08: "public/furniture/Picture_08.glb",
+  Picture_17: "public/furniture/Picture_17.glb",
+  Picture_21: "public/furniture/Picture_21.glb",
+  Plants_05: "public/furniture/Plants_05.glb",
+  Plants_15: "public/furniture/Plants_15.glb",
+  Plants_19: "public/furniture/Plants_19.glb",
+  Toilet_03: "public/furniture/Toilet_03.glb",
+  Toothbrush_01: "public/furniture/Toothbrush_01.glb",
+  Toothpaste_01: "public/furniture/Toothpaste_01.glb",
+  Toy_02: "public/furniture/Toy_02.glb",
+  Toy_03: "public/furniture/Toy_03.glb",
+  Utensils_01: "public/furniture/Utensils_01.glb",
+  Wash_Basin_07: "public/furniture/Wash_Basin_07.glb",
+  Work_Table_06: "public/furniture/Work_Table_06.glb"
 };
-const NAMES = { Chair: 'Sedia', Table: 'Tavolo', Bed: 'Letto' };
+
+const NAMES = {
+  Armchair_02: 'Poltrona',
+  Armchair_18: 'Poltrona Mod.',
+  Bath_03: 'Vasca',
+  Bed_02: 'Letto Singolo',
+  Bed_07: 'Letto Matrimoniale',
+  Book_03: 'Libri',
+  Book_08: 'Libro Aperto',
+  Chair_17: 'Sedia',
+  Chair_PC_04: 'Sedia Gaming',
+  Clock_03: 'Orologio',
+  Closet_01: 'Armadio',
+  Closet_02: 'Guardaroba',
+  Coffee_Table_03: 'Tavolino',
+  Computer_01: 'Computer',
+  Couch_08: 'Divano',
+  Couch_11: 'Divano Angolare',
+  Cutting_board_02: 'Tagliere',
+  ExerciseBike_01: 'Cyclette',
+  Fridge_01: 'Frigorifero',
+  GameConsole_01: 'Console',
+  Guitar_01: 'Chitarra',
+  Kitchen_D_01: 'Cucina 1',
+  Kitchen_D_06: 'Cucina 2',
+  Kitchen_D_08: 'Cucina 3',
+  Kitchen_D_09: 'Cucina 4',
+  Kitchen_D_10: 'Cucina 5',
+  Kitchen_Table_09: 'Tavolo Cucina',
+  Light_05: 'Lampada',
+  Microwave_01: 'Microonde',
+  Mixer_08: 'Frullatore',
+  Nightstand_02: 'Comodino',
+  Paper_01: 'Documenti',
+  Paper_02: 'Fogli',
+  Picture_08: 'Quadro 1',
+  Picture_17: 'Quadro 2',
+  Picture_21: 'Quadro 3',
+  Plants_05: 'Pianta 1',
+  Plants_15: 'Pianta 2',
+  Plants_19: 'Pianta 3',
+  Toilet_03: 'Wc',
+  Toothbrush_01: 'Spazzolino',
+  Toothpaste_01: 'Dentifricio',
+  Toy_02: 'Giocattolo 1',
+  Toy_03: 'Giocattolo 2',
+  Utensils_01: 'Utensili',
+  Wash_Basin_07: 'Lavandino',
+  Work_Table_06: 'Scrivania'
+};
+
+const ICONS = {
+  Armchair_02: '🛋️', Armchair_18: '🛋️', Bath_03: '🛁', Bed_02: '🛏️', Bed_07: '🛏️',
+  Book_03: '📚', Book_08: '📖', Chair_17: '🪑', Chair_PC_04: '💺', Clock_03: '⏰',
+  Closet_01: '🚪', Closet_02: '🚪', Coffee_Table_03: '☕', Computer_01: '💻', Couch_08: '🛋️',
+  Couch_11: '🛋️', Cutting_board_02: '🔪', ExerciseBike_01: '🚴', Fridge_01: '🧊', GameConsole_01: '🎮',
+  Guitar_01: '🎸', Kitchen_D_01: '🍳', Kitchen_D_06: '🍳', Kitchen_D_08: '🍳', Kitchen_D_09: '🍳',
+  Kitchen_D_10: '🍳', Kitchen_Table_09: '🍽️', Light_05: '💡', Microwave_01: '🍲', Mixer_08: '🍹',
+  Nightstand_02: '🗄️', Paper_01: '📄', Paper_02: '📃', Picture_08: '🖼️', Picture_17: '🖼️',
+  Picture_21: '🖼️', Plants_05: '🪴', Plants_15: '🪴', Plants_19: '🌿', Toilet_03: '🚽',
+  Toothbrush_01: '🪥', Toothpaste_01: '🦷', Toy_02: '🧸', Toy_03: '🧸', Utensils_01: '🍴',
+  Wash_Basin_07: '🚰', Work_Table_06: '🖥️'
+};
+
 const WALLS = ['#ffffff', '#f3e9dc', '#cfe3f0', '#d9ead3', '#f4cccc', '#e6d5f0', '#3d4a5c', '#2b2b2b'];
 const BOUNDS = { minX: -4.8, maxX: 4.8, minZ: -4.8, maxZ: 4.8 };
 
@@ -244,21 +351,17 @@ function init() {
   Object.keys(assetPaths).forEach(type => {
     const b = document.createElement('button');
     b.className = 'card';
-    b.innerHTML = `<img alt="" data-type="${type}">${NAMES[type]}`;
+    b.innerHTML = `<span>${ICONS[type] || '📦'}</span>${NAMES[type] || type}`;
     b.onclick = () => { closeSheet(); spawnItem(type, 0, 0, 0, null, true); };
     $('cards').append(b);
   });
-  makeThumbs();
 
   $('openAdd').onclick = () => openSheet('add');
-  $('openWall').onclick = () => openSheet('wall');
-  $('scrim').onclick = closeSheet;
+  $('openWall').onclick = () => openSheet('wall');$('scrim').onclick = closeSheet;
   $('rotBtn').onclick = rotateSelected;
   $('delBtn').onclick = removeSelected;
-  $('doneBtn').onclick = () => select(null);
-  $('viewBtn').onclick = () => setView(!topMode);
-  $('centerBtn').onclick = () => setView(topMode);
-  $('saveBtn').onclick = saveUserHouse;
+  $('doneBtn').onclick = () => select(null);$('viewBtn').onclick = () => setView(!topMode);
+  $('centerBtn').onclick = () => setView(topMode);$('saveBtn').onclick = saveUserHouse;
 
   window.addEventListener('pointerdown', onDown, true);
   window.addEventListener('pointermove', onMove);
@@ -274,36 +377,6 @@ function init() {
 
   setView(false);
   animate();
-}
-
-/* ---------- Real previews of the .glb models ---------- */
-function makeThumbs() {
-  const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-  r.setPixelRatio(1); r.setSize(256, 256);
-  const sc = new THREE.Scene();
-  sc.add(new THREE.AmbientLight(0xffffff, 0.9));
-  const dl = new THREE.DirectionalLight(0xffffff, 0.8);
-  dl.position.set(3, 6, 4); sc.add(dl);
-  const cam = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
-  const loader = new THREE.GLTFLoader();
-  const jobs = Object.keys(assetPaths).map(type => new Promise(res => {
-    loader.load(assetPaths[type], g => {
-      const obj = g.scene;
-      sc.add(obj);
-      const box = new THREE.Box3().setFromObject(obj);
-      const c = box.getCenter(new THREE.Vector3());
-      const dist = box.getSize(new THREE.Vector3()).length() / 2 / Math.tan(THREE.MathUtils.degToRad(17.5)) * 1.05;
-      cam.near = dist / 100; cam.far = dist * 10; cam.updateProjectionMatrix();
-      cam.position.copy(c).add(new THREE.Vector3(1, 0.8, 1).normalize().multiplyScalar(dist));
-      cam.lookAt(c);
-      r.render(sc, cam);
-      const img = document.querySelector(`img[data-type="${type}"]`);
-      if (img) img.src = r.domElement.toDataURL('image/png');
-      sc.remove(obj);
-      res();
-    }, undefined, () => res());
-  }));
-  Promise.all(jobs).then(() => { r.dispose(); r.forceContextLoss(); });
 }
 
 /* ---------- Furniture ---------- */
@@ -337,7 +410,7 @@ function freeSpot(item) {
 function spawnItem(type, x, z, rotY = 0, id = null, auto = false) {
   pending++; $('loading').hidden = false;
   const done = () => { if (--pending <= 0) $('loading').hidden = true; };
-  new THREE.GLTFLoader().load(assetPaths[type] || assetPaths.Chair, gltf => {
+  new THREE.GLTFLoader().load(assetPaths[type] || assetPaths.Chair_17, gltf => {
     const obj = gltf.scene;
     obj.scale.set(1.5, 1.5, 1.5);
     obj.position.set(x, 0, z);
