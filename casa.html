@@ -47,6 +47,13 @@ body.sel #selbar{display:flex}
 #scrim{position:fixed;inset:0;z-index:7;background:rgba(0,0,0,.45);display:none}
 #sheet[data-open]+#scrim{display:block}
 h2{font-size:16px;margin:0 0 12px}
+
+/* Stili Categorie Sims Style */
+.cat-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:10px;scrollbar-width:none}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{padding:8px 14px;border-radius:10px;background:var(--raise);font-size:13px;font-weight:600;white-space:nowrap;color:var(--mut);border:1px solid var(--line)}
+.cat-tab.active{background:var(--acc);color:var(--tx);border-color:transparent}
+
 .grid{display:grid;gap:10px}
 #cards{grid-template-columns:repeat(3,1fr)}
 .card{min-height:110px;border-radius:16px;background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:13px;padding:8px;text-align:center}
@@ -103,7 +110,11 @@ h2{font-size:16px;margin:0 0 12px}
 </nav>
 
 <section id="sheet" aria-live="polite">
-  <div data-p id="addP"><h2>Cosa vuoi aggiungere?</h2><div class="grid" id="cards"></div></div>
+  <div data-p id="addP">
+    <h2>Cosa vuoi aggiungere?</h2>
+    <div class="cat-tabs" id="catTabs"></div>
+    <div class="grid" id="cards"></div>
+  </div>
   <div data-p id="wallP"><h2>Colore dei muri</h2><div class="grid" id="swatches"></div>
     <label class="custom">Altro colore<input type="color" id="wallPick" value="#ffffff"></label></div>
 </section>
@@ -170,36 +181,36 @@ const assetPaths = {
 };
 
 const NAMES = {
-  Armchair_02: 'Poltrona',
-  Armchair_18: 'Poltrona Mod.',
-  Bath_03: 'Vasca',
-  Bed_02: 'Letto Singolo',
-  Bed_07: 'Letto Matrimoniale',
-  Book_03: 'Libri',
-  Book_08: 'Libro Aperto',
-  Chair_17: 'Sedia',
+  Armchair_02: 'Poltrona singola blu',
+  Armchair_18: 'Poltrona singola rossa',
+  Bath_03: 'Vasca con doccia',
+  Bed_02: 'Piazza e mezzo con armadietti',
+  Bed_07: 'Una piazza rosa',
+  Book_03: 'Libri in fila',
+  Book_08: 'Pila di libri',
+  Chair_17: 'Sgabello d\'onore',
   Chair_PC_04: 'Sedia Gaming',
-  Clock_03: 'Orologio',
-  Closet_01: 'Armadio',
-  Closet_02: 'Guardaroba',
+  Clock_03: 'Orologio pendolo',
+  Closet_01: 'Mensola',
+  Closet_02: 'Armadio cocomero',
   Coffee_Table_03: 'Tavolino',
   Computer_01: 'Computer',
-  Couch_08: 'Divano',
-  Couch_11: 'Divano Angolare',
+  Couch_08: 'Divano 3 posti',
+  Couch_11: 'Divano arcaico 2 posti',
   Cutting_board_02: 'Tagliere',
   ExerciseBike_01: 'Cyclette',
   Fridge_01: 'Frigorifero',
-  GameConsole_01: 'Console',
-  Guitar_01: 'Chitarra',
-  Kitchen_D_01: 'Cucina 1',
-  Kitchen_D_06: 'Cucina 2',
-  Kitchen_D_08: 'Cucina 3',
-  Kitchen_D_09: 'Cucina 4',
-  Kitchen_D_10: 'Cucina 5',
-  Kitchen_Table_09: 'Tavolo Cucina',
-  Light_05: 'Lampada',
+  GameConsole_01: 'Controller Xbox',
+  Guitar_01: 'Chitarra autistica',
+  Kitchen_D_01: 'Piano lavoro ',
+  Kitchen_D_06: 'Tavolino con tovaglia',
+  Kitchen_D_08: 'Armadietto 1 porta',
+  Kitchen_D_09: 'Armadietto 1/2 porte',
+  Kitchen_D_10: 'Armadietto 2 porte',
+  Kitchen_Table_09: 'Tavolo legno scuro',
+  Light_05: 'Lampada con piedi',
   Microwave_01: 'Microonde',
-  Mixer_08: 'Frullatore',
+  Mixer_08: 'becuccio del lavandino',
   Nightstand_02: 'Comodino',
   Paper_01: 'Documenti',
   Paper_02: 'Fogli',
@@ -214,10 +225,44 @@ const NAMES = {
   Toothpaste_01: 'Dentifricio',
   Toy_02: 'Giocattolo 1',
   Toy_03: 'Giocattolo 2',
-  Utensils_01: 'Utensili',
+  Utensils_01: 'mattarello',
   Wash_Basin_07: 'Lavandino',
   Work_Table_06: 'Scrivania'
 };
+
+const CATEGORIES = {
+  salotto: {
+    name: "🛋️ Salotto",
+    items: ['Armchair_02', 'Armchair_18', 'Chair_17', 'Coffee_Table_03', 'Couch_08', 'Couch_11', 'Kitchen_D_06']
+  },
+  camere: {
+    name: "🛏️ Camere",
+    items: ['Bed_02', 'Bed_07', 'Closet_01', 'Closet_02', 'Nightstand_02']
+  },
+  cucina: {
+    name: "🍳 Cucina",
+    items: ['Cutting_board_02', 'Fridge_01', 'Kitchen_D_01', 'Kitchen_D_08', 'Kitchen_D_09', 'Kitchen_D_10', 'Kitchen_Table_09', 'Microwave_01', 'Mixer_08', 'Utensils_01']
+  },
+  bagno: {
+    name: "🛁 Bagno",
+    items: ['Bath_03', 'Toilet_03', 'Toothbrush_01', 'Toothpaste_01', 'Wash_Basin_07']
+  },
+  studio: {
+    name: "💻 Studio & Tech",
+    items: ['Chair_PC_04', 'Computer_01', 'GameConsole_01', 'Work_Table_06']
+  },
+  decorazioni: {
+    name: "🪴 Decorazioni",
+    items: ['Book_03', 'Book_08', 'Clock_03', 'Light_05', 'Paper_01', 'Paper_02', 'Picture_08', 'Picture_17', 'Picture_21', 'Plants_05', 'Plants_15', 'Plants_19']
+  },
+  varie: {
+    name: "🎸 Varie & Hobby",
+    items: ['ExerciseBike_01', 'Guitar_01', 'Toy_02', 'Toy_03']
+  }
+};
+
+let activeCategory = 'salotto';
+const thumbCache = {};
 
 const WALLS = ['#ffffff', '#f3e9dc', '#cfe3f0', '#d9ead3', '#f4cccc', '#e6d5f0', '#3d4a5c', '#2b2b2b'];
 const BOUNDS = { minX: -4.8, maxX: 4.8, minZ: -4.8, maxZ: 4.8 };
@@ -301,6 +346,41 @@ function setWall(c, fromUser) {
   }
 }
 
+/* ---------- Category Rendering ---------- */
+function renderCategoryTabs() {
+  const tabsContainer = $('catTabs');
+  tabsContainer.innerHTML = '';
+  Object.keys(CATEGORIES).forEach(catKey => {
+    const cat = CATEGORIES[catKey];
+    const btn = document.createElement('button');
+    btn.className = `cat-tab ${catKey === activeCategory ? 'active' : ''}`;
+    btn.textContent = cat.name;
+    btn.onclick = () => {
+      activeCategory = catKey;
+      renderCategoryTabs();
+      renderCategoryCards();
+    };
+    tabsContainer.append(btn);
+  });
+}
+
+function renderCategoryCards() {
+  const cardsContainer = $('cards');
+  cardsContainer.innerHTML = '';
+  const items = CATEGORIES[activeCategory].items || [];
+  items.forEach(type => {
+    const b = document.createElement('button');
+    b.className = 'card';
+    b.innerHTML = `<img id="thumb_${type}" alt="${NAMES[type]}"><br>${NAMES[type]}`;
+    b.onclick = () => { closeSheet(); spawnItem(type, 0, 0, 0, null, true); };
+    cardsContainer.append(b);
+    const imgEl = $(`thumb_${type}`);
+    if (imgEl && thumbCache[type]) {
+      imgEl.src = thumbCache[type];
+    }
+  });
+}
+
 /* ---------- Camera ---------- */
 function setView(top) {
   topMode = top;
@@ -374,15 +454,8 @@ function init() {
   });
   $('wallPick').addEventListener('input', e => setWall(e.target.value, true));
 
-  Object.keys(assetPaths).forEach(type => {
-    const b = document.createElement('button');
-    b.className = 'card';
-    b.innerHTML = `<img id="thumb_${type}" alt="${NAMES[type]}"><br>${NAMES[type]}`;
-    b.onclick = () => { closeSheet(); spawnItem(type, 0, 0, 0, null, true); };
-    $('cards').append(b);
-  });
-
-  // Genera le anteprime 3D per ogni modello
+  renderCategoryTabs();
+  renderCategoryCards();
   generateThumbnails();
 
   $('openAdd').onclick = () => openSheet('add');
@@ -409,7 +482,7 @@ function init() {
   animate();
 }
 
-/* ---------- Thumbnail Generator ---------- */
+/* ---------- Thumbnail Generator & Caching ---------- */
 async function generateThumbnails() {
   const loader = new THREE.GLTFLoader();
   const c = document.createElement('canvas');
@@ -428,8 +501,6 @@ async function generateThumbnails() {
   thumbScene.add(dir);
 
   for (const [type, path] of Object.entries(assetPaths)) {
-    const imgEl = $(`thumb_${type}`);
-    if (!imgEl) continue;
     await new Promise(resolve => {
       loader.load(path, gltf => {
         const obj = gltf.scene;
@@ -443,8 +514,11 @@ async function generateThumbnails() {
 
         thumbScene.add(obj);
         thumbRen.render(thumbScene, thumbCam);
-        imgEl.src = c.toDataURL('image/png');
+        thumbCache[type] = c.toDataURL('image/png');
         thumbScene.remove(obj);
+
+        const imgEl = $(`thumb_${type}`);
+        if (imgEl) imgEl.src = thumbCache[type];
         resolve();
       }, undefined, () => resolve());
     });
