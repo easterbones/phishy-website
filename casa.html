@@ -247,6 +247,18 @@ function toast(msg, act, fn) {
   toast.t = setTimeout(() => t.classList.remove('on'), act ? 5000 : 2400);
 }
 
+function select(item) {
+  if (item) {
+    showObjectMenu(item);
+    document.body.classList.add('sel');
+  } else {
+    hideObjectMenu();
+    selected = null;
+    if (helper) { scene.remove(helper); helper = null; }
+    document.body.classList.remove('sel');
+  }
+}
+
 function openSheet(which) { select(null); $('sheet').dataset.open = which; }
 function closeSheet() { delete $('sheet').dataset.open; hideObjectMenu(); }
 
@@ -375,10 +387,10 @@ function init() {
 
   $('openAdd').onclick = () => openSheet('add');
   $('openWall').onclick = () => openSheet('wall');$('scrim').onclick = closeSheet;
-  $('menuRotateBtn').onclick = () => { rotateSelected(); hideObjectMenu(); };$('menuMoveBtn').onclick = () => { hideObjectMenu(); if (selected) { drag = { id: -1, item: selected, off: new THREE.Vector3(), pos: selected.mesh.position.clone(), moved: true }; controls.enabled = false; } };
-  $('menuCloseBtn').onclick = () => { hideObjectMenu(); selected = null; if(helper){scene.remove(helper); helper=null;} };$('rotBtn').onclick = rotateSelected;
+  $('menuRotateBtn').onclick = () => { rotateSelected(); hideObjectMenu(); };$('menuMoveBtn').onclick = () => { hideObjectMenu(); toast('Trascina il mobile per spostarlo'); };
+  $('menuCloseBtn').onclick = () => select(null);$('rotBtn').onclick = rotateSelected;
   $('delBtn').onclick = removeSelected;
-  $('doneBtn').onclick = () => { hideObjectMenu(); selected = null; if(helper){scene.remove(helper); helper=null;} document.body.classList.remove('sel'); };$('viewBtn').onclick = () => setView(!topMode);
+  $('doneBtn').onclick = () => select(null);$('viewBtn').onclick = () => setView(!topMode);
   $('centerBtn').onclick = () => setView(topMode);$('saveBtn').onclick = saveUserHouse;
 
   window.addEventListener('pointerdown', onDown, true);
@@ -481,7 +493,7 @@ function spawnItem(type, x, z, rotY = 0, id = null, auto = false) {
     if (auto && collides(item) && !freeSpot(item)) { toast('La stanza è piena'); done(); return; }
     scene.add(obj);
     placed.push(item);
-    if (auto) { setDirty(true); showObjectMenu(item); document.body.classList.add('sel'); }
+    if (auto) { setDirty(true); select(item); }
     done();
   }, undefined, err => { console.error(err); toast('Impossibile caricare il modello'); done(); });
 }
@@ -499,11 +511,10 @@ function rotateSelected() {
 
 function removeSelected() {
   const it = selected; if (!it) return;
-  hideObjectMenu();
+  select(null);
   scene.remove(it.mesh);
   placed.splice(placed.indexOf(it), 1);
   setDirty(true);
-  document.body.classList.remove('sel');
   toast('Mobile rimosso', 'Annulla', () => { scene.add(it.mesh); placed.push(it); setDirty(true); });
 }
 
@@ -529,8 +540,7 @@ function onDown(e) {
   aim(e);
   const it = pickItem();
   if (it) {
-    showObjectMenu(it);
-    document.body.classList.add('sel');
+    select(it);
     const p = new THREE.Vector3();
     raycaster.ray.intersectPlane(dragPlane, p);
     drag = { id: e.pointerId, item: it, off: it.mesh.position.clone().sub(p), pos: it.mesh.position.clone(), moved: false, x: e.clientX, y: e.clientY };
@@ -570,10 +580,7 @@ function onUp(e) {
     drag = null;
   } else if (tap && e.pointerId === tap.id) {
     if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 8) {
-      hideObjectMenu();
-      selected = null;
-      if (helper) { scene.remove(helper); helper = null; }
-      document.body.classList.remove('sel');
+      select(null);
     }
     tap = null;
   }
